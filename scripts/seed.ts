@@ -9,7 +9,7 @@ if (process.env.NODE_ENV === 'production' && process.env.SEED !== '1') {
   process.exit(1);
 }
 
-const sampleNote = 'SAMPLE DATA. Not a live wire item.';
+const sampleNote = 'SAMPLE DATA. Not a live item.';
 
 const rows: ItemInput[] = [
   {
@@ -36,7 +36,7 @@ const rows: ItemInput[] = [
     canonical_key: 'model:anthropic/claude-haiku-5.5',
     title: '[sample] Claude Haiku 5.5',
     url: 'https://example.com/sample/claude-haiku-5.5',
-    summary: `${sampleNote} Also posted on the tools wire.`,
+    summary: `${sampleNote} Also noted alongside the tools.`,
     published_at: '2026-10-06T15:00:00.000Z',
     posted_at: '2026-10-06T17:00:00.000Z',
     channel: 'clawbytes',
@@ -52,7 +52,7 @@ const rows: ItemInput[] = [
     canonical_key: 'url:https://example.com/sample/claude-workspace',
     title: '[sample] Claude in Google Workspace',
     url: 'https://example.com/sample/claude-workspace',
-    summary: `${sampleNote} Ship-lane news from the tools wire.`,
+    summary: `${sampleNote} Ship-lane news about a tool.`,
     published_at: '2026-10-07T12:00:00.000Z',
     posted_at: '2026-10-07T12:30:00.000Z',
     channel: 'clawbytes',
@@ -132,7 +132,7 @@ const rows: ItemInput[] = [
     canonical_key: 'url:https://example.com/sample/sdk-browser',
     title: '[sample] SDK computer and browser control',
     url: 'https://example.com/sample/sdk-browser',
-    summary: `${sampleNote} Watch-lane note from the tools wire.`,
+    summary: `${sampleNote} Watch-lane note on a tool worth tracking.`,
     published_at: '2026-10-08T18:00:00.000Z',
     posted_at: '2026-10-08T18:20:00.000Z',
     channel: 'clawbytes',
@@ -159,6 +159,8 @@ const issueResult = await applyIssueBatch(
         `# [sample] ${brand.newsletterName}: week of 5 Oct 2026`,
         '',
         '*Sample: Claude is so back*',
+        '',
+        brand.newsletterBlurb,
         '',
         `${sampleNote} This letter exists so the newsletter archive has something to render locally.`,
         '',

@@ -14,13 +14,13 @@ export function SiteFooter() {
               <Crab /> {brand.name}
             </p>
             <p>
-              {brand.name} is the curated tier on top of the Telegram wires. {brand.byline}.
+              {brand.about} {brand.byline}.
             </p>
           </div>
           <nav aria-label="Footer" className="footer-links">
             {wires.map((wire) => (
               <a key={wire.id} href={wire.joinUrl}>
-                <Crab /> Join {wire.channelLabel}
+                <Crab /> {wire.label} feed
               </a>
             ))}
             <a href="/feed.xml">

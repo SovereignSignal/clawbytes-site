@@ -7,7 +7,10 @@ import { includeSampleData } from '@/lib/samples';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata = { title: 'Search' };
+export const metadata = {
+  title: 'Search',
+  description: 'Find an agent, model, tool, repo, or status incident on ClawBytes.',
+};
 
 export default async function SearchPage({
   searchParams,
@@ -25,14 +28,14 @@ export default async function SearchPage({
     <main>
       <PageHeader
         section="01"
-        kicker="Registry"
+        kicker="Find"
         title="Search"
-        dek="Search titles, summaries, orgs, and lanes."
+        dek="Find an agent, model, tool, repo, or status incident."
       />
       <form className="filters" action="/search" method="get" role="search">
         <label>
           Items
-          <input name="q" defaultValue={q} placeholder="model, org, repo, lane" />
+          <input name="q" defaultValue={q} placeholder="agent, model, tool, repo" />
         </label>
         <label>
           Lane

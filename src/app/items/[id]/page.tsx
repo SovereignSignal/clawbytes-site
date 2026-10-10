@@ -25,7 +25,7 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
   if (!item) notFound();
   return (
     <main>
-      <SectionTag section="01" label="Registry" meta="Item" />
+      <SectionTag section="01" label="Entry" meta="Item" />
       <p className="kicker"><Link href="/archive">Archive</Link></p>
       <ItemList items={[item]} titleAs="h1" />
     </main>

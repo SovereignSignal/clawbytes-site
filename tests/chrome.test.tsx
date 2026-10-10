@@ -113,7 +113,8 @@ describe('crab personality', () => {
     const cards = renderToStaticMarkup(<ChannelStrip />);
     expect(cards).toContain(brand.mark);
     expect(cards).toContain('Models');
-    expect(cards).toContain('Join t.me/ModelBytes');
+    expect(cards).toContain('Open feed');
+    expect(cards).not.toContain('Join t.me/ModelBytes');
     expect(cards).toContain('Repos');
 
     const row = renderToStaticMarkup(<ItemList items={[sample]} />);

@@ -60,7 +60,8 @@ function systemPrompt(): string {
     'opening is one paragraph and must name at least one item title from the facts.',
     'leads is an array of { canonical_key, sentence }. Include every lead key from the user message once.',
     'Each lead sentence is one line, must contain that item\'s title, and must not mention another item\'s URL.',
-    'sections is an array of { wire, note } for wires tools, models, and repos. note is one sentence and contains no URL.',
+    'sections is an array of { wire, note } for tools, models, and repos. The JSON key is wire. note is one sentence on why that section mattered, and contains no URL.',
+    'In theme_line, opening, lead sentences, and notes, do not say wire, wires, Telegram, or bot.',
   ].join(' ');
 }
 
@@ -206,12 +207,12 @@ export async function generateDraft(input: {
     }
   }
 
-  const themeLine = accepted?.themeLine ?? (ranked.length ? templateThemeLine(leads) : 'A quiet week on the wires');
+  const themeLine = accepted?.themeLine ?? (ranked.length ? templateThemeLine(leads) : 'A quiet week');
   const opening =
     accepted?.opening ??
     (ranked.length
       ? templateOpening(ranked, leads, input.weekStart)
-      : `The wires logged 0 items in the week of ${formatWhen(input.weekStart)}.`);
+      : `Nothing worth logging landed in the week of ${formatWhen(input.weekStart)}.`);
 
   const draftSections = sections.map((section) => ({
     id: section.id,

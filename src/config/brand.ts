@@ -9,15 +9,19 @@ export const brand = {
   mark: '🦀',
   newsletterName: 'ClawBytes Weekly',
   byline: 'A Sovereign Signal project',
-  tagline: 'The curated tier of the AI wires.',
+  tagline: 'Where AI is heading.',
   description:
-    'ClawBytes is the curated registry and weekly letter on top of the Telegram wires: tools and shipping news, new models, and interesting repos.',
+    'ClawBytes is an opinionated signal on the agents, models, tools, and open-source repos worth knowing: what shipped, what matters, and where it\'s going.',
+  about:
+    'ClawBytes tells you where AI is heading: which agents, models, tools, and repos are worth knowing.',
+  newsletterBlurb: 'One letter a week on what shipped, what matters, and where AI is going.',
   wires: [
     {
       id: 'tools',
       label: 'Tools',
       href: '/tools',
-      blurb: 'Coding agents, AI dev tools, and status-page incidents. Lanes: Ship, Watch, Read, Community.',
+      blurb:
+        'Agents and dev tools worth using, the releases that change the work, and status-page incidents worth watching.',
       channelLabel: 'ClawBytes',
       joinUrl: 'https://t.me/clawbytes',
       handle: 't.me/clawbytes',
@@ -28,7 +32,7 @@ export const brand = {
       id: 'models',
       label: 'Models',
       href: '/models',
-      blurb: 'New AI models, every modality, in five tiers.',
+      blurb: 'New models worth building on, in every modality.',
       channelLabel: 'ModelBytes',
       joinUrl: 'https://t.me/ModelBytes',
       handle: 't.me/ModelBytes',
@@ -39,7 +43,7 @@ export const brand = {
       id: 'repos',
       label: 'Repos',
       href: '/repos',
-      blurb: 'Trending GitHub repos, grouped by theme.',
+      blurb: 'Open-source repos worth knowing, by the problem they take on.',
       channelLabel: 'interesting-repos',
       joinUrl: 'https://t.me/interestingrepos',
       handle: 't.me/interestingrepos',
@@ -67,6 +71,11 @@ export function publicWires(): Array<Wire & { joinUrl: string; href: string }> {
   return brand.wires.filter(
     (wire): wire is Wire & { joinUrl: string; href: string } => wire.public && wire.joinUrl !== null && wire.href !== null,
   );
+}
+
+export function publicBlurb(id: PublicWireId): string {
+  const wire = brand.wires.find((entry) => entry.id === id);
+  return wire?.blurb ?? '';
 }
 
 export function botLabel(sourceBot: string): string {

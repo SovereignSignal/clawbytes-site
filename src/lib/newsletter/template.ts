@@ -19,13 +19,13 @@ export function dominantValue(items: RankableItem[], field: 'org' | 'lane'): { v
 export function templateThemeLine(leads: RankableItem[]): string {
   const org = dominantValue(leads, 'org');
   if (org && (org.count >= 3 || org.count >= Math.ceil(leads.length * 0.34))) {
-    return `${org.value} across the wires`;
+    return `${org.value} set the direction`;
   }
   const lane = dominantValue(leads, 'lane');
   if (lane && (lane.count >= 3 || lane.count >= Math.ceil(leads.length * 0.34))) {
-    return `${lane.value} across the wires`;
+    return `${lane.value} set the direction`;
   }
-  return 'The week on the wires';
+  return 'Where this week pointed';
 }
 
 export function templateOpening(items: RankableItem[], leads: RankableItem[], weekStart: Date): string {
@@ -33,7 +33,8 @@ export function templateOpening(items: RankableItem[], leads: RankableItem[], we
   const when = formatWhen(weekStart);
   const org = dominantValue(leads, 'org');
   const lead = leads[0];
-  const base = `The wires logged ${items.length} items in the week of ${when}. ${multi} of them showed up on more than one bot.`;
+  const itemWord = items.length === 1 ? 'item' : 'items';
+  const base = `The week of ${when} turned up ${items.length} ${itemWord} worth knowing. ${multi} showed up in more than one place.`;
   if (!lead) return `${base} Nothing clustered strongly enough to name a tighter theme.`;
   if (org) {
     return `${base} ${org.value} is on ${org.count} of the lead items, starting with ${lead.title}.`;
@@ -49,6 +50,6 @@ export function templateSentence(item: RankableItem): string {
 export function templateSectionNote(id: PublicSectionId, count: number): string {
   const label = id === 'tools' ? 'Tools' : id === 'models' ? 'Models' : 'Repos';
   if (count === 0) return `${label} was quiet this week.`;
-  if (count === 1) return `${label} carried 1 item this week.`;
-  return `${label} carried ${count} items this week.`;
+  if (count === 1) return `${label} had one thing worth knowing this week.`;
+  return `${label} had ${count} things worth knowing this week.`;
 }

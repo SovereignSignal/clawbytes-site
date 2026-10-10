@@ -7,7 +7,10 @@ import { includeSampleData } from '@/lib/samples';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata = { title: 'Archive' };
+export const metadata = {
+  title: 'Archive',
+  description: 'The full ClawBytes log, newest first.',
+};
 
 export default async function ArchivePage({
   searchParams,
@@ -19,8 +22,8 @@ export default async function ArchivePage({
   const result = await safeQuery(() => listArchive(includeSampleData(), page), { items: [], hasMore: false });
   return (
     <main>
-      <PageHeader section="01" kicker="Registry" title="Archive" dek="Every registry item, newest first." />
-      <ItemList items={result.items} />
+      <PageHeader section="01" kicker="Log" title="Archive" dek="The full log, newest first." />
+      <ItemList items={result.items} empty="Nothing in the log yet." />
       <div className="pager">
         {page > 1 ? <Link href={page === 2 ? '/archive' : `/archive?page=${page - 1}`}>Newer</Link> : <span />}
         {result.hasMore ? <Link href={`/archive?page=${page + 1}`}>Older</Link> : <span />}

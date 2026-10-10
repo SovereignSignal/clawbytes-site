@@ -4,7 +4,7 @@ import { Empty } from '@/components/Empty';
 import { ItemList } from '@/components/ItemList';
 import { PageHeader } from '@/components/PageHeader';
 import { Pager } from '@/components/Pager';
-import { brand } from '@/config/brand';
+import { publicBlurb } from '@/config/brand';
 import { groupByOrg } from '@/lib/group';
 import { listingHref } from '@/lib/listing';
 import { listTools, pageNumber } from '@/lib/queries';
@@ -13,7 +13,9 @@ import { includeSampleData } from '@/lib/samples';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata = { title: 'Tools' };
+const toolsBlurb = publicBlurb('tools');
+
+export const metadata = { title: 'Tools', description: toolsBlurb };
 
 const lanes = ['Ship', 'Watch', 'Read', 'Community'];
 
@@ -31,15 +33,14 @@ export default async function ToolsPage({
     hasMore: false,
   });
   const groups = groupByOrg(result.items);
-  const channel = brand.wires.find((wire) => wire.id === 'tools')?.channelLabel;
   const preserved = { lane, kind };
   return (
     <main>
       <PageHeader
         section="01"
-        kicker={channel ?? 'Tools'}
+        kicker="Agents"
         title="Tools"
-        dek={`Releases, status-page incidents, and ${channel ?? 'tools'} news, grouped by tool or org.`}
+        dek={toolsBlurb}
       />
       <div className="theme-row">
         <Link href="/tools" aria-current={lane || kind ? undefined : 'page'}>All lanes</Link>
@@ -53,7 +54,7 @@ export default async function ToolsPage({
           Status
         </Link>
       </div>
-      {groups.length === 0 ? <Empty>No tool items yet.</Empty> : null}
+      {groups.length === 0 ? <Empty>No tools or status incidents yet.</Empty> : null}
       {groups.map((group) => (
         <section key={group.key} className="group">
           <h2>{group.key}</h2>

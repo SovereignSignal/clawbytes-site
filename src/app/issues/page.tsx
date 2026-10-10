@@ -9,7 +9,7 @@ import { includeSampleData } from '@/lib/samples';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata = { title: brand.newsletterName };
+export const metadata = { title: brand.newsletterName, description: brand.newsletterBlurb };
 
 export default async function IssuesPage() {
   const issues = await safeQuery(() => listPublishedIssues(includeSampleData()), []);
@@ -17,11 +17,11 @@ export default async function IssuesPage() {
     <main>
       <PageHeader
         section="01"
-        kicker="Letter"
+        kicker="Weekly"
         title={brand.newsletterName}
-        dek="Published letters only. Drafts stay off the site until you publish them."
+        dek={brand.newsletterBlurb}
       />
-      {issues.length === 0 ? <Empty>No published issues yet.</Empty> : null}
+      {issues.length === 0 ? <Empty>No issue of {brand.newsletterName} yet.</Empty> : null}
       <ol className="item-list">
         {issues.map((issue) => (
           <li key={issue.slug} className="item">

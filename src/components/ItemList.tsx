@@ -40,7 +40,7 @@ export function ItemList({
               {item.modality ? <span>{item.modality}</span> : null}
               {when ? <span>{when}</span> : null}
               {score ? <span>score {score}</span> : null}
-              {bots.length > 1 ? <span className="chip">On {bots.length} wires</span> : null}
+              {bots.length > 1 ? <span className="chip">In {bots.length} places</span> : null}
               {item.sample ? <span className="chip">Sample</span> : null}
             </div>
             <Title>
@@ -49,7 +49,7 @@ export function ItemList({
             {item.summary ? <p className="summary">{item.summary}</p> : null}
             <div className="item-links">
               <a href={item.url} rel="noreferrer">Source</a>
-              <Link href={`/items/${item.id}`}>Registry</Link>
+              <Link href={`/items/${item.id}`}>Details</Link>
               {posts.map((appearance) => (
                 <a key={`${appearance.sourceBot}-${appearance.channelPostUrl}`} href={appearance.channelPostUrl ?? '#'} rel="noreferrer">
                   {botName(appearance.sourceBot)} post

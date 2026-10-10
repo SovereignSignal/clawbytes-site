@@ -28,7 +28,7 @@ export default async function IssuePage({ params }: { params: Promise<{ slug: st
   const html = renderMarkdown(issue.bodyMarkdown);
   return (
     <main>
-      <SectionTag section="01" label="Letter" meta={formatWhen(issue.publishedAt)} />
+      <SectionTag section="01" label="Weekly" meta={formatWhen(issue.publishedAt)} />
       <p className="kicker"><Crab /> {brand.newsletterName}</p>
       <article className="prose" dangerouslySetInnerHTML={{ __html: html }} />
     </main>

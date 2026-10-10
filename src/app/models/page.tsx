@@ -1,6 +1,7 @@
 import { ItemList } from '@/components/ItemList';
 import { PageHeader } from '@/components/PageHeader';
 import { Pager } from '@/components/Pager';
+import { publicBlurb } from '@/config/brand';
 import { MODALITIES } from '@/lib/ingest/items';
 import { listModelFacets, listModels, pageNumber } from '@/lib/queries';
 import { safeQuery } from '@/lib/safe';
@@ -8,7 +9,9 @@ import { includeSampleData } from '@/lib/samples';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata = { title: 'Models' };
+const modelsBlurb = publicBlurb('models');
+
+export const metadata = { title: 'Models', description: modelsBlurb };
 
 export default async function ModelsPage({
   searchParams,
@@ -30,9 +33,9 @@ export default async function ModelsPage({
     <main>
       <PageHeader
         section="01"
-        kicker="ModelBytes"
+        kicker="Build on"
         title="Models"
-        dek="New models from ModelBytes, every modality, sorted by date."
+        dek={modelsBlurb}
       />
       <form className="filters" action="/models" method="get">
         <label>
@@ -64,7 +67,7 @@ export default async function ModelsPage({
         </label>
         <button type="submit">Filter</button>
       </form>
-      <ItemList items={result.items} empty="No models match." />
+      <ItemList items={result.items} empty="No models to show." />
       <Pager page={page} hasMore={result.hasMore} path="/models" params={{ modality, org, lane }} />
     </main>
   );
