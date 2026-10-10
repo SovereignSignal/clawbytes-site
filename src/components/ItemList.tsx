@@ -32,7 +32,7 @@ export function ItemList({
         return (
           <li key={item.id} className="item">
             <div className="item-meta">
-              <span>{kindLabel(item.kind)}</span>
+              <span className={item.kind === 'status' ? 'chip' : undefined}>{kindLabel(item.kind)}</span>
               {shownLanes.map((lane) => (
                 <span key={lane}>{lane}</span>
               ))}

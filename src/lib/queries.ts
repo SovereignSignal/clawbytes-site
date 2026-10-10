@@ -45,6 +45,15 @@ const PAGE_SIZE = 40;
 /** published_at, else the earliest appearance posted_at, else created_at. */
 const eventOrder = sql`coalesce(${items.publishedAt}, (select min(${appearances.postedAt}) from ${appearances} where ${appearances.itemId} = ${items.id}), ${items.createdAt})`;
 
+/**
+ * Total order for offset pages and RSS. Several items share one Telegram
+ * post time; id keeps that tie from swapping, so a later page neither
+ * repeats a row nor skips one.
+ */
+function itemOrder(): SQL {
+  return sql`${eventOrder} desc, ${items.id} desc`;
+}
+
 export function pageNumber(value: number | string | undefined): number {
   const page = typeof value === 'number' ? value : Number(value ?? '1');
   if (!Number.isFinite(page) || page < 1) return 1;
@@ -98,7 +107,7 @@ async function listWhere(
     .select()
     .from(items)
     .where(where)
-    .orderBy(sql`${eventOrder} desc`)
+    .orderBy(itemOrder())
     .limit(size + 1)
     .offset((safePage - 1) * size);
   const hasMore = rows.length > size;
@@ -197,19 +206,24 @@ export async function listLatest(samples: boolean, limit = 25): Promise<ItemView
     .select()
     .from(items)
     .where(sampleFilter(samples))
-    .orderBy(sql`${eventOrder} desc`)
+    .orderBy(itemOrder())
     .limit(limit);
   return withAppearances(rows);
 }
 
-export async function listArchive(samples: boolean, page: number): Promise<{ items: ItemView[]; hasMore: boolean }> {
-  return listWhere(sampleFilter(samples), page);
+export async function listArchive(
+  samples: boolean,
+  page: number,
+  pageSize?: number,
+): Promise<{ items: ItemView[]; hasMore: boolean }> {
+  return listWhere(sampleFilter(samples), page, pageSize);
 }
 
 export type ListFilters = {
   modality?: string;
   org?: string;
   lane?: string;
+  kind?: string;
   page?: number;
   pageSize?: number;
 };
@@ -263,7 +277,12 @@ export async function listTools(
   return listWhere(
     andWhere(
       sampleFilter(samples),
-      or(eq(items.kind, 'tool_release'), and(eq(items.kind, 'news'), clawbytesNews)),
+      or(
+        eq(items.kind, 'tool_release'),
+        eq(items.kind, 'status'),
+        and(eq(items.kind, 'news'), clawbytesNews),
+      ),
+      filters.kind ? eq(items.kind, filters.kind) : undefined,
       laneMatch(filters.lane),
     ),
     filters.page,
@@ -333,7 +352,7 @@ export async function listPublishedIssues(samples: boolean): Promise<IssueView[]
     .select()
     .from(issues)
     .where(andWhere(issueSampleFilter(samples), eq(issues.status, 'published')))
-    .orderBy(desc(issues.publishedAt));
+    .orderBy(desc(issues.publishedAt), desc(issues.slug));
   return rows.map(toIssue);
 }
 

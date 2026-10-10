@@ -1,6 +1,6 @@
 import { getDb } from '@/db/client';
 import { isAuthorized } from '@/lib/auth';
-import { applyItemBatch, parseItemBatch } from '@/lib/ingest/items';
+import { applyItemBatch, deleteItemsByKey, parseDeleteKeys, parseItemBatch } from '@/lib/ingest/items';
 import { revalidateItems } from '@/lib/revalidate';
 
 export const dynamic = 'force-dynamic';
@@ -37,5 +37,42 @@ export async function POST(req: Request): Promise<Response> {
   } catch (err) {
     console.error('[ai-wire] item ingest failed:', err);
     return Response.json({ error: 'ingest failed' }, { status: 500 });
+  }
+}
+
+function dryRunRequested(req: Request): boolean {
+  const value = new URL(req.url).searchParams.get('dry_run');
+  return value === '1' || value === 'true';
+}
+
+export async function DELETE(req: Request): Promise<Response> {
+  if (!isAuthorized(req)) {
+    return Response.json({ error: 'unauthorized' }, { status: 401 });
+  }
+  const dryRun = dryRunRequested(req);
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return Response.json(
+      { errors: [{ index: null, messages: ['body is not valid JSON'] }] },
+      { status: 400 },
+    );
+  }
+  const parsed = parseDeleteKeys(body);
+  if (!parsed.ok) {
+    return Response.json({ errors: parsed.errors }, { status: 400 });
+  }
+  try {
+    const result = await deleteItemsByKey(getDb(), parsed.keys, { dryRun });
+    if (!dryRun && result.deleted.length) revalidateItems();
+    return Response.json({
+      deleted: result.deleted,
+      not_found: result.notFound,
+      dry_run: dryRun,
+    });
+  } catch (err) {
+    console.error('[ai-wire] item delete failed:', err);
+    return Response.json({ error: 'delete failed' }, { status: 500 });
   }
 }

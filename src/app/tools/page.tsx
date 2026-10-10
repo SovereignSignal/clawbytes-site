@@ -20,34 +20,38 @@ const lanes = ['Ship', 'Watch', 'Read', 'Community'];
 export default async function ToolsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ lane?: string; page?: string }>;
+  searchParams: Promise<{ lane?: string; kind?: string; page?: string }>;
 }) {
   const params = await searchParams;
   const lane = params.lane?.trim() || undefined;
+  const kind = params.kind === 'status' ? 'status' : undefined;
   const page = pageNumber(params.page);
-  const result = await safeQuery(() => listTools(includeSampleData(), { lane, page }), {
+  const result = await safeQuery(() => listTools(includeSampleData(), { lane, kind, page }), {
     items: [],
     hasMore: false,
   });
   const groups = groupByOrg(result.items);
   const channel = brand.wires.find((wire) => wire.id === 'tools')?.channelLabel;
-  const preserved = { lane };
+  const preserved = { lane, kind };
   return (
     <main>
       <PageHeader
         section="01"
         kicker={channel ?? 'Tools'}
         title="Tools"
-        dek={`Releases and ${channel ?? 'tools'} news, grouped by tool or org.`}
+        dek={`Releases, status-page incidents, and ${channel ?? 'tools'} news, grouped by tool or org.`}
       />
       <div className="theme-row">
-        <Link href="/tools" aria-current={lane ? undefined : 'page'}>All lanes</Link>
+        <Link href="/tools" aria-current={lane || kind ? undefined : 'page'}>All lanes</Link>
         {lanes.map((name) => (
-          <Link key={name} href={listingHref('/tools', { lane: name }, 1)} aria-current={lane === name ? 'page' : undefined}>
+          <Link key={name} href={listingHref('/tools', { lane: name }, 1)} aria-current={!kind && lane === name ? 'page' : undefined}>
             {name === 'Ship' ? <Crab /> : null}
             {name}
           </Link>
         ))}
+        <Link href={listingHref('/tools', { kind: 'status' }, 1)} aria-current={kind === 'status' ? 'page' : undefined}>
+          Status
+        </Link>
       </div>
       {groups.length === 0 ? <Empty>No tool items yet.</Empty> : null}
       {groups.map((group) => (

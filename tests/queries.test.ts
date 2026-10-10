@@ -3,13 +3,58 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { Db } from '@/db/client';
 import { appearances, issues, items } from '@/db/schema';
 import { applyIssueBatch } from '@/lib/ingest/issues';
-import { applyItemBatch } from '@/lib/ingest/items';
+import { applyItemBatch, type ItemInput } from '@/lib/ingest/items';
 import { saveDraftIssue } from '@/lib/newsletter/store';
-import { buildItemFeed } from '@/lib/rss';
-import { eventAt, itemInWeek, listLatest, listModels, listPublishedIssues, listRepos, listTools, loadWeekItems, searchItems } from '@/lib/queries';
+import { buildIssueFeed, buildItemFeed } from '@/lib/rss';
+import { eventAt, itemInWeek, listArchive, listLatest, listModels, listPublishedIssues, listRepos, listTools, loadWeekItems, searchItems, type ItemView } from '@/lib/queries';
 import { weekWindow } from '@/lib/newsletter/week';
 import { createTestDb } from './helpers/db';
 import { item } from './helpers/item';
+
+const STAMP = '2026-09-15T18:05:00.000Z';
+
+function byEventThenId(rows: ItemView[]): string[] {
+  return [...rows]
+    .sort((a, b) => {
+      const time = eventAt(b).getTime() - eventAt(a).getTime();
+      if (time !== 0) return time;
+      if (a.id === b.id) return 0;
+      return a.id < b.id ? 1 : -1;
+    })
+    .map((row) => row.id);
+}
+
+async function collectPages(
+  load: (page: number) => Promise<{ items: ItemView[]; hasMore: boolean }>,
+  pageSize: number,
+): Promise<ItemView[]> {
+  const rows: ItemView[] = [];
+  const seen = new Set<string>();
+  for (let page = 1; page < 30; page += 1) {
+    const result = await load(page);
+    if (result.hasMore) expect(result.items).toHaveLength(pageSize);
+    else expect(result.items.length).toBeLessThanOrEqual(pageSize);
+    for (const row of result.items) {
+      expect(seen.has(row.id)).toBe(false);
+      seen.add(row.id);
+      rows.push(row);
+    }
+    if (!result.hasMore) return rows;
+  }
+  throw new Error('paging did not end');
+}
+
+function tied(index: number, overrides: Partial<ItemInput>): ItemInput {
+  return item({
+    title: `Tied ${overrides.kind ?? 'model'} ${index}`,
+    url: `https://example.com/tied-${overrides.kind ?? 'model'}-${index}`,
+    channel_post_url: `https://t.me/wire/${overrides.kind ?? 'model'}/${index}`,
+    published_at: index % 2 === 0 ? STAMP : null,
+    posted_at: STAMP,
+    modality: overrides.kind === 'model' ? 'text' : null,
+    ...overrides,
+  });
+}
 
 describe('public queries', () => {
   let db: Db;
@@ -195,6 +240,174 @@ describe('public queries', () => {
     const searchPage = await searchItems(true, 'tool', { page: 2, pageSize: 1 });
     expect(searchPage.items[0]?.title).toBe('Ship tool');
     expect(searchPage.hasMore).toBe(false);
+  });
+
+  it('pages tied timestamps without duplicates or gaps', async () => {
+    const batch = [
+      ...[0, 1, 2, 3, 4].map((index) =>
+        tied(index, {
+          source_bot: 'interesting-repos',
+          kind: 'repo',
+          canonical_key: `repo:acme/tied-${index}`,
+          channel: 'interestingrepos',
+          lane: 'agents',
+        }),
+      ),
+      ...[0, 1, 2, 3].map((index) =>
+        tied(index, {
+          kind: 'model',
+          canonical_key: `model:acme/tied-${index}`,
+          channel: 'ModelBytes',
+        }),
+      ),
+      ...[0, 1, 2].map((index) =>
+        tied(index, {
+          source_bot: 'release-bot',
+          kind: 'tool_release',
+          canonical_key: `release:acme/tied-${index}@1`,
+          channel: 'release-alerts',
+          lane: 'Ship',
+        }),
+      ),
+    ];
+    await applyItemBatch(db, batch);
+
+    const pageSize = 2;
+    const repos = await collectPages((page) => listRepos(true, { page, pageSize }), pageSize);
+    const models = await collectPages((page) => listModels(true, { page, pageSize }), pageSize);
+    const tools = await collectPages((page) => listTools(true, { page, pageSize }), pageSize);
+    const found = await collectPages((page) => searchItems(true, 'Tied', { page, pageSize }), pageSize);
+    const archive = await collectPages((page) => listArchive(true, page, pageSize), pageSize);
+
+    expect(repos).toHaveLength(5);
+    expect(models).toHaveLength(4);
+    expect(tools).toHaveLength(3);
+    expect(found).toHaveLength(12);
+    expect(archive).toHaveLength(12);
+    expect(repos.map((row) => row.id)).toEqual(byEventThenId(repos));
+    expect(models.map((row) => row.id)).toEqual(byEventThenId(models));
+    expect(tools.map((row) => row.id)).toEqual(byEventThenId(tools));
+    expect(found.map((row) => row.id)).toEqual(byEventThenId(found));
+    expect(archive.map((row) => row.id)).toEqual(byEventThenId(archive));
+
+    const again = await collectPages((page) => listArchive(true, page, pageSize), pageSize);
+    expect(again.map((row) => row.id)).toEqual(archive.map((row) => row.id));
+
+    const latest = await listLatest(true, 50);
+    expect(latest.map((row) => row.id)).toEqual(archive.map((row) => row.id));
+    const feed = buildItemFeed(latest);
+    let cursor = -1;
+    for (const row of latest) {
+      const at = feed.indexOf(row.title);
+      expect(at).toBeGreaterThan(cursor);
+      cursor = at;
+    }
+  });
+
+  it('includes status items on tools', async () => {
+    await applyItemBatch(db, [
+      item({
+        source_bot: 'clawbytes',
+        kind: 'status',
+        canonical_key: 'url:https://status.example.com/incidents/1',
+        url: 'https://status.example.com/incidents/1',
+        title: 'API incident',
+        channel: 'clawbytes',
+        channel_post_url: 'https://t.me/clawbytes/11',
+        lane: 'Watch',
+        modality: null,
+        org: 'Example',
+        published_at: null,
+        posted_at: '2026-10-01T00:00:00.000Z',
+      }),
+      item({
+        source_bot: 'release-bot',
+        kind: 'status',
+        canonical_key: 'url:https://status.example.com/incidents/2',
+        url: 'https://status.example.com/incidents/2',
+        title: 'Release status',
+        channel: 'release-alerts',
+        channel_post_url: 'https://t.me/releasealerts/11',
+        lane: 'Ship',
+        modality: null,
+        published_at: null,
+      }),
+      item({
+        source_bot: 'clawbytes',
+        kind: 'news',
+        canonical_key: 'url:https://example.com/claw-news',
+        url: 'https://example.com/claw-news',
+        title: 'Claw news',
+        channel: 'clawbytes',
+        channel_post_url: 'https://t.me/clawbytes/12',
+        lane: 'Read',
+        modality: null,
+      }),
+      item({
+        source_bot: 'modelbytes',
+        kind: 'news',
+        canonical_key: 'url:https://example.com/model-news',
+        url: 'https://example.com/model-news',
+        title: 'Model news',
+        channel: 'ModelBytes',
+        channel_post_url: 'https://t.me/ModelBytes/12',
+        modality: null,
+      }),
+      item({
+        source_bot: 'clawbytes',
+        kind: 'paper',
+        canonical_key: 'url:https://example.com/paper',
+        url: 'https://example.com/paper',
+        title: 'A paper',
+        channel: 'clawbytes',
+        channel_post_url: 'https://t.me/clawbytes/13',
+        modality: null,
+      }),
+    ]);
+    await applyItemBatch(
+      db,
+      [
+        item({
+          source_bot: 'clawbytes',
+          kind: 'status',
+          canonical_key: 'url:https://status.example.com/sample',
+          url: 'https://status.example.com/sample',
+          title: 'Sample incident',
+          channel: 'clawbytes',
+          channel_post_url: 'https://t.me/clawbytes/14',
+          modality: null,
+        }),
+      ],
+      { sample: true },
+    );
+
+    const tools = await listTools(false, { pageSize: 20 });
+    expect(tools.items.map((row) => row.title).sort()).toEqual(['API incident', 'Claw news', 'Release status']);
+    expect(tools.items.some((row) => row.kind === 'status')).toBe(true);
+    const statusOnly = await listTools(false, { kind: 'status', pageSize: 20 });
+    expect(statusOnly.items.map((row) => row.title).sort()).toEqual(['API incident', 'Release status']);
+    expect((await listTools(false, { lane: 'Watch', pageSize: 20 })).items.map((row) => row.title)).toEqual([
+      'API incident',
+    ]);
+    expect((await listTools(true, { pageSize: 20 })).items.map((row) => row.title)).toContain('Sample incident');
+  });
+
+  it('breaks issue-feed ties by slug', async () => {
+    const published = {
+      title: 'Issue',
+      theme_line: 'Theme',
+      published_at: '2026-10-05T00:00:00.000Z',
+      body_markdown: 'Body',
+      status: 'published' as const,
+    };
+    await applyIssueBatch(db, [
+      { ...published, slug: 'week-a', title: 'Issue A' },
+      { ...published, slug: 'week-b', title: 'Issue B' },
+    ]);
+    const rows = await listPublishedIssues(true);
+    expect(rows.map((row) => row.slug)).toEqual(['week-b', 'week-a']);
+    const feed = buildIssueFeed(rows);
+    expect(feed.indexOf('Issue B')).toBeLessThan(feed.indexOf('Issue A'));
   });
 
   it('includes an undated item created during the week', () => {

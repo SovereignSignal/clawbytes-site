@@ -2,7 +2,7 @@
 
 Bots push here. The site never calls the bots. The database can be rebuilt by replaying pushes.
 
-Auth for both endpoints: `Authorization: Bearer {AI_WIRE_INGEST_TOKEN}`.
+Auth for every ingest route: `Authorization: Bearer {AI_WIRE_INGEST_TOKEN}`.
 
 A bad token is `401 {"error":"unauthorized"}`. A body that is not a batch, or a batch where every item fails validation, is `400 {"errors":[...]}` and nothing is written. A batch with at least one valid item is `200 {"upserted":n,"created":n,"keys":[...]}`. When some items fail, that 200 body also includes `errors` and the valid items are still written.
 
@@ -50,6 +50,22 @@ Required: `source_bot`, `kind`, `canonical_key`, `title`, `url`.
 Upsert is on `canonical_key`. A second bot posting the same key adds an appearance (`source_bot`, `channel`, `channel_post_url`, `posted_at`, `lane`) and does not create a second item. Each appearance keeps the lane that bot sent. The item's own lane stays with the first bot that set it, so a cross-post does not replace a model tier with a tools lane. Omitted optional fields keep the stored value. Sending the same payload twice changes nothing.
 
 Each error looks like `{"index":0,"canonical_key":"...","messages":["..."]}`. `index` is null when the body itself is wrong.
+
+## DELETE /api/ingest/items
+
+Removes registry items by canonical key. Same bearer token. A bad token is `401 {"error":"unauthorized"}` and nothing is deleted. The route is not linked from the site.
+
+```json
+{"canonical_keys": ["url:https://example.com/post"]}
+```
+
+`canonical_keys` is an array of at most 100 strings. Each entry is 1 to 300 characters and is matched exactly against the stored key. Case, query, fragment, and a trailing slash all count. Duplicate keys are reported once, in first-seen order.
+
+`200 {"deleted":["..."],"not_found":["..."],"dry_run":false}`. `deleted` lists keys that were removed. `not_found` lists keys that were not in the registry. Deleting an item also deletes its appearances.
+
+`?dry_run=1` (or `dry_run=true`) returns the same shape with `"dry_run": true` and does not write. Keys that would be removed are still listed under `deleted`.
+
+A body that is not JSON, or a `canonical_keys` value that is not an array of strings, is `400 {"errors":[...]}` and nothing is written.
 
 ## POST /api/ingest/issues
 
