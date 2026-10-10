@@ -41,7 +41,7 @@ export function buildIssueFeed(rows: IssueView[]): string {
       ].join('\n');
     })
     .join('\n');
-  return channel(brand.newsletterName, `${base}/issues`, `${brand.newsletterName}. ${brand.description}`, entries);
+  return channel(brand.newsletterName, `${base}/issues`, `${brand.newsletterName}. ${brand.newsletterBlurb}`, entries);
 }
 
 function channel(title: string, link: string, description: string, entries: string): string {

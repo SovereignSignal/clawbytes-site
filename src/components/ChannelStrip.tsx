@@ -23,7 +23,7 @@ export function ChannelStrip() {
             </span>
             <span>{wire.blurb}</span>
             <span className="handle">
-              <Crab /> Join {wire.handle}
+              <Crab /> Open feed
             </span>
           </a>
         );

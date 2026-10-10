@@ -3,6 +3,7 @@ import { Empty } from '@/components/Empty';
 import { ItemList } from '@/components/ItemList';
 import { PageHeader } from '@/components/PageHeader';
 import { Pager } from '@/components/Pager';
+import { publicBlurb } from '@/config/brand';
 import { groupByTheme } from '@/lib/group';
 import { listingHref } from '@/lib/listing';
 import { listRepoThemes, listRepos, pageNumber } from '@/lib/queries';
@@ -11,7 +12,9 @@ import { includeSampleData } from '@/lib/samples';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata = { title: 'Repos' };
+const reposBlurb = publicBlurb('repos');
+
+export const metadata = { title: 'Repos', description: reposBlurb };
 
 export default async function ReposPage({
   searchParams,
@@ -31,9 +34,9 @@ export default async function ReposPage({
     <main>
       <PageHeader
         section="01"
-        kicker="interesting-repos"
+        kicker="Open source"
         title="Repos"
-        dek="Trending GitHub repos from interesting-repos, by theme."
+        dek={reposBlurb}
       />
       <div className="theme-row">
         <Link href="/repos" aria-current={lane ? undefined : 'page'}>All themes</Link>
@@ -49,7 +52,7 @@ export default async function ReposPage({
           <ItemList items={group.items} />
         </section>
       ))}
-      {groups.length === 0 ? <Empty>No repos match.</Empty> : null}
+      {groups.length === 0 ? <Empty>No repos to show.</Empty> : null}
       <Pager page={page} hasMore={result.hasMore} path="/repos" params={{ lane }} />
     </main>
   );

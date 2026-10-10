@@ -1,14 +1,14 @@
 # ClawBytes
 
-ClawBytes is the curated registry, public site, and weekly letter for Sov's AI-news wires. The Telegram channels are the broad tier. This site is the tier on top: one row per story, a weekly draft, and an archive.
+Every week, the agents, models, tools and open-source repos worth your time: what shipped, what matters, and where it's all going. Live feeds are one place to follow along.
 
 The name lives in [`src/config/brand.ts`](src/config/brand.ts). The git repo stays `ai-wire`. Ingest env vars stay `AI_WIRE_*`.
 
-| Wire | What it covers | Join |
+| Section | Why it is here | Live feed |
 |---|---|---|
-| Tools | Coding agents, AI dev tools, and status-page incidents. Lanes: Ship, Watch, Read, Community. | https://t.me/clawbytes |
-| Models | New AI models, all modalities, five tiers (ModelBytes). | https://t.me/ModelBytes |
-| Repos | Trending GitHub repos by theme (interesting-repos). | https://t.me/interestingrepos |
+| Tools | Agents and dev tools worth using, the releases that change the work, and status-page incidents worth watching. | https://t.me/clawbytes |
+| Models | New models worth building on, in every modality. | https://t.me/ModelBytes |
+| Repos | Open-source repos worth knowing, by the problem they take on. | https://t.me/interestingrepos |
 | Releases | Private Release Bot. Items show on Tools. No public join link. | — |
 
 ## Architecture
@@ -36,14 +36,14 @@ Stack: Next.js (App Router, TypeScript), Postgres, Drizzle migrations, Zod on th
 
 | Route | What it shows |
 |---|---|
-| `/` | Latest items and the latest published issue, plus join links |
+| `/` | Latest items, the latest published issue, and links to the live feeds |
 | `/models` | `kind=model`, filter by modality and org, newest first |
-| `/tools` | Tool releases, ClawBytes news, and status-page incidents, grouped by org |
+| `/tools` | Agents, dev tools, releases, and status-page incidents, grouped by org |
 | `/repos` | `kind=repo`, grouped by theme (`lane`) |
-| `/archive` | Every public item |
-| `/items/[id]` | One item: source link and the Telegram posts it appeared in |
+| `/archive` | The full log, newest first |
+| `/items/[id]` | One item: source link and the posts it appeared in |
 | `/search` | Title, summary, org, lane, canonical key |
-| `/issues`, `/issues/[slug]` | Published letters only. Drafts stay off the site |
+| `/issues`, `/issues/[slug]` | Published issues of ClawBytes Weekly. Drafts stay off the site |
 | `/feed.xml` | RSS of items |
 | `/issues/feed.xml` | RSS of published issues |
 | `/api/health` | Readiness. Railway uses this |

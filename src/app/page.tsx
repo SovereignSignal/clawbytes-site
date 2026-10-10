@@ -25,9 +25,9 @@ export default async function HomePage() {
     <main>
       <Hero />
       <PixelDivider />
-      <SectionTag section="01" label="Wires" meta="Telegram" />
+      <SectionTag section="01" label="Follow" meta="Live" />
       <h2 className="section-title">
-        <Crab /> Join a wire
+        <Crab /> Follow the live feeds
       </h2>
       <ChannelStrip />
       {issue ? (
@@ -37,14 +37,17 @@ export default async function HomePage() {
           <p className="summary">{issue.themeLine}</p>
         </Link>
       ) : (
-        <Empty>No published newsletter yet.</Empty>
+        <Empty>No issue of {brand.newsletterName} yet.</Empty>
       )}
       <section id="latest">
-        <SectionTag section="02" label="Registry" meta="Newest" />
+        <SectionTag section="02" label="Now" meta="Newest" />
         <h2 className="section-title">
           <Crab /> Latest
         </h2>
-        <ItemList items={latest} empty="The registry is empty. Bots push items after they post to Telegram." />
+        <ItemList
+          items={latest}
+          empty="Nothing logged yet. Agents, models, tools, and repos show up here when they matter."
+        />
       </section>
     </main>
   );

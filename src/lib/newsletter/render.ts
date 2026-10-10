@@ -44,6 +44,8 @@ export function renderMarkdown(draft: NewsletterDraft): string {
     '',
     `*${draft.themeLine}*`,
     '',
+    brand.newsletterBlurb,
+    '',
     draft.opening,
     '',
   ];
@@ -61,6 +63,7 @@ export function renderMarkdown(draft: NewsletterDraft): string {
     }
     lines.push('');
   }
+  lines.push(`${brand.name}. ${brand.byline}.`, '');
   return lines.join('\n').trim() + '\n';
 }
 
@@ -110,6 +113,7 @@ export function renderEmailHtml(draft: NewsletterDraft): string {
 <h1 style="font-size:28px;line-height:1.2;margin:0 0 8px;">${escapeHtml(draft.title)}</h1>
 <p style="margin:0 0 8px;font-style:italic;">${escapeHtml(draft.themeLine)}</p>
 <p style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;margin:0 0 20px;">Week of ${escapeHtml(when)}</p>
+<p style="margin:0 0 20px;">${escapeHtml(brand.newsletterBlurb)}</p>
 <p style="margin:0 0 20px;">${escapeHtml(draft.opening)}</p>
 ${leads ? `<h2 style="font-size:18px;margin:0 0 8px;">The short list</h2><ul style="padding-left:18px;margin:0 0 8px;">${leads}</ul>` : ''}
 ${sections}
