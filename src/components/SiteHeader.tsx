@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useId, useRef, useState } from 'react';
 import { Crab } from '@/components/Crab';
-import { IconCrab } from '@/components/PixelIcons';
+import { PixelCrab } from '@/components/PixelCrab';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { brand } from '@/config/brand';
 
@@ -52,7 +52,7 @@ export function SiteHeader() {
     <header className="site-header">
       <div className="wrap masthead">
         <Link href="/" className="wordmark" aria-label={`${brand.name} home`}>
-          <IconCrab size={32} />
+          <PixelCrab size={40} />
           <span className="wordmark-name">
             <Crab /> {brand.name}
           </span>

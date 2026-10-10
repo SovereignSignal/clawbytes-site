@@ -113,27 +113,6 @@ export const IconRadar = ({ size = 32, className }: PixelIconProps) =>
     className,
   );
 
-/** Side-view pixel crab used as the logo mark. */
-export function IconCrab({ size = 28, className }: PixelIconProps) {
-  return pixelGrid(
-    [
-      [0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0],
-      [0, 2, 2, 2, 2, 0, 0, 0, 0, 2, 2, 2, 2, 0],
-      [0, 2, 3, 3, 2, 0, 0, 0, 0, 2, 3, 3, 2, 0],
-      [0, 0, 2, 2, 1, 1, 1, 1, 1, 1, 2, 2, 0, 0],
-      [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-      [1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1],
-      [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-      [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0],
-      [0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0],
-      [0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 0],
-    ],
-    'hsl(var(--primary))',
-    size,
-    className,
-  );
-}
-
 export function PixelDiamond({ className = '' }: { className?: string }) {
   return (
     <svg width="12" height="12" viewBox="0 0 4 4" className={className} style={{ imageRendering: 'pixelated' }} aria-hidden="true">

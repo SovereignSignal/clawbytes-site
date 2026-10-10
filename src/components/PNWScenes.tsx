@@ -1,3 +1,5 @@
+import { PixelCrab } from '@/components/PixelCrab';
+
 /** Pacific Northwest pixel scenery. Positions are fixed so server and client markup match. */
 
 export function PixelTree({ x = 0, opacity = 0.2 }: { x?: number; opacity?: number }) {
@@ -92,7 +94,7 @@ export function PixelFern({ className = '' }: { className?: string }) {
 /** Shore strip for the home hero, with a crab on the sand. */
 export function HeroShore() {
   return (
-    <svg className="hero-shore" viewBox="0 0 800 150" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <svg className="hero-shore" viewBox="0 0 800 150" preserveAspectRatio="xMidYMax slice" shapeRendering="crispEdges" aria-hidden="true">
       <polygon points="0,90 70,28 140,78 210,18 290,70 370,24 460,74 540,30 620,68 700,36 800,72 800,150 0,150" fill="hsl(var(--muted-foreground))" opacity="0.16" />
       <polygon points="0,108 90,62 180,100 270,58 360,96 450,64 540,100 640,70 740,98 800,78 800,150 0,150" fill="hsl(var(--secondary))" opacity="0.2" />
       <g opacity="0.85">
@@ -113,17 +115,8 @@ export function HeroShore() {
       <rect x={560} y={116} width={26} height={3} fill="hsl(var(--primary))" opacity="0.45" />
       <rect x={700} y={120} width={34} height={3} fill="hsl(var(--primary))" opacity="0.35" />
       <rect x={0} y={132} width={800} height={18} fill="hsl(var(--accent))" opacity="0.45" />
-      <g transform="translate(620,78) scale(1.7)" className="shore-crab">
-        <rect x={8} y={0} width={6} height={2} fill="hsl(var(--primary))" />
-        <rect x={28} y={0} width={6} height={2} fill="hsl(var(--primary))" />
-        <rect x={4} y={2} width={12} height={4} fill="hsl(var(--primary))" />
-        <rect x={26} y={2} width={12} height={4} fill="hsl(var(--primary))" />
-        <rect x={10} y={8} width={22} height={8} fill="hsl(var(--primary))" />
-        <rect x={14} y={10} width={3} height={3} fill="hsl(var(--foreground))" />
-        <rect x={25} y={10} width={3} height={3} fill="hsl(var(--foreground))" />
-        <rect x={12} y={16} width={3} height={5} fill="hsl(var(--primary))" />
-        <rect x={20} y={16} width={3} height={6} fill="hsl(var(--primary))" />
-        <rect x={28} y={16} width={3} height={5} fill="hsl(var(--primary))" />
+      <g transform="translate(608,78) scale(2.7)" className="shore-crab">
+        <PixelCrab inline />
       </g>
     </svg>
   );

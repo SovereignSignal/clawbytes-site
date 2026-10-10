@@ -1,63 +1,87 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useLayoutEffect, useState } from 'react';
+import { THEME_DARK, THEME_LIGHT, THEME_STORAGE_KEY, themeChoiceFromStorage, type ThemeChoice } from '@/lib/theme';
 
-const STORAGE_KEY = 'clawbytes-theme';
-const DARK = '#121b2b';
-const LIGHT = '#faf9f4';
+const CHOICES: Array<{ id: ThemeChoice; label: string }> = [
+  { id: 'system', label: 'System' },
+  { id: 'light', label: 'Light' },
+  { id: 'dark', label: 'Dark' },
+];
 
-function applyTheme(light: boolean) {
-  document.documentElement.classList.toggle('light', light);
-  document.documentElement.classList.toggle('dark', !light);
-  const color = light ? LIGHT : DARK;
+function readStored(): string | null {
+  try {
+    return localStorage.getItem(THEME_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writeStored(choice: ThemeChoice) {
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, choice);
+  } catch {
+    /* Private mode can block storage. The class still updates. */
+  }
+}
+
+function paintThemeColor(choice: ThemeChoice) {
   document.querySelectorAll('meta[name="theme-color"]').forEach((node) => {
-    node.setAttribute('content', color);
+    const media = node.getAttribute('media') ?? '';
+    const content =
+      choice === 'light' ? THEME_LIGHT : choice === 'dark' ? THEME_DARK : media.includes('light') ? THEME_LIGHT : THEME_DARK;
+    node.setAttribute('content', content);
   });
 }
 
+export function applyThemeChoice(choice: ThemeChoice) {
+  document.documentElement.classList.toggle('light', choice === 'light');
+  document.documentElement.classList.toggle('dark', choice === 'dark');
+  paintThemeColor(choice);
+}
+
 export function ThemeToggle() {
-  useEffect(() => {
-    applyTheme(document.documentElement.classList.contains('light'));
+  const [choice, setChoice] = useState<ThemeChoice>('system');
+
+  useLayoutEffect(() => {
+    const sync = () => {
+      const next = themeChoiceFromStorage(readStored());
+      setChoice(next);
+      applyThemeChoice(next);
+    };
+    sync();
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const onMedia = () => {
+      if (themeChoiceFromStorage(readStored()) === 'system') applyThemeChoice('system');
+    };
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === THEME_STORAGE_KEY) sync();
+    };
+    media.addEventListener('change', onMedia);
+    window.addEventListener('storage', onStorage);
+    return () => {
+      media.removeEventListener('change', onMedia);
+      window.removeEventListener('storage', onStorage);
+    };
   }, []);
 
   return (
-    <button
-      type="button"
-      className="theme-toggle"
-      aria-label="Toggle color theme"
-      onClick={() => {
-        const next = !document.documentElement.classList.contains('light');
-        applyTheme(next);
-        try {
-          localStorage.setItem(STORAGE_KEY, next ? 'light' : 'dark');
-        } catch {
-          /* Private mode can block storage. The class still updates. */
-        }
-      }}
-    >
-      <span className="theme-icon theme-icon-sun" aria-hidden="true">
-        <SunIcon />
-      </span>
-      <span className="theme-icon theme-icon-moon" aria-hidden="true">
-        <MoonIcon />
-      </span>
-    </button>
-  );
-}
-
-function SunIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <circle cx="8" cy="8" r="2.4" stroke="currentColor" strokeWidth="1.4" />
-      <path d="M8 1.5v1.8M8 12.7v1.8M1.5 8h1.8M12.7 8h1.8M3.2 3.2l1.3 1.3M11.5 11.5l1.3 1.3M12.8 3.2l-1.3 1.3M4.5 11.5l-1.3 1.3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="square" />
-    </svg>
-  );
-}
-
-function MoonIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <path d="M9.2 1.6a5.6 5.6 0 1 0 5.2 7.6A4.6 4.6 0 0 1 9.2 1.6Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
-    </svg>
+    <div className="theme-switch" role="group" aria-label="Color theme">
+      {CHOICES.map((entry) => (
+        <button
+          key={entry.id}
+          type="button"
+          className="theme-choice"
+          aria-pressed={choice === entry.id}
+          onClick={() => {
+            setChoice(entry.id);
+            applyThemeChoice(entry.id);
+            writeStored(entry.id);
+          }}
+        >
+          {entry.label}
+        </button>
+      ))}
+    </div>
   );
 }
