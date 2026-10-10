@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ItemList } from '@/components/ItemList';
+import { PageHeader } from '@/components/PageHeader';
 import { listArchive } from '@/lib/queries';
 import { safeQuery } from '@/lib/safe';
 import { includeSampleData } from '@/lib/samples';
@@ -18,8 +19,7 @@ export default async function ArchivePage({
   const result = await safeQuery(() => listArchive(includeSampleData(), page), { items: [], hasMore: false });
   return (
     <main>
-      <h1>Archive</h1>
-      <p className="dek">Every registry item, newest first.</p>
+      <PageHeader section="01" kicker="Registry" title="Archive" dek="Every registry item, newest first." />
       <ItemList items={result.items} />
       <div className="pager">
         {page > 1 ? <Link href={page === 2 ? '/archive' : `/archive?page=${page - 1}`}>Newer</Link> : <span />}

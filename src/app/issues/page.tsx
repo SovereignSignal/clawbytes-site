@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { Empty } from '@/components/Empty';
+import { PageHeader } from '@/components/PageHeader';
 import { brand } from '@/config/brand';
 import { formatWhen } from '@/lib/format';
 import { listPublishedIssues } from '@/lib/queries';
@@ -13,9 +15,13 @@ export default async function IssuesPage() {
   const issues = await safeQuery(() => listPublishedIssues(includeSampleData()), []);
   return (
     <main>
-      <h1>{brand.newsletterName}</h1>
-      <p className="dek">Published letters only. Drafts stay off the site until you publish them.</p>
-      {issues.length === 0 ? <p className="empty">No published issues yet.</p> : null}
+      <PageHeader
+        section="01"
+        kicker="Letter"
+        title={brand.newsletterName}
+        dek="Published letters only. Drafts stay off the site until you publish them."
+      />
+      {issues.length === 0 ? <Empty>No published issues yet.</Empty> : null}
       <ol className="item-list">
         {issues.map((issue) => (
           <li key={issue.slug} className="item">

@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { Crab } from '@/components/Crab';
+import { SectionTag } from '@/components/SectionTag';
 import { brand } from '@/config/brand';
 import { formatWhen } from '@/lib/format';
 import { renderMarkdown } from '@/lib/markdown';
@@ -26,7 +28,8 @@ export default async function IssuePage({ params }: { params: Promise<{ slug: st
   const html = renderMarkdown(issue.bodyMarkdown);
   return (
     <main>
-      <p className="kicker">{brand.newsletterName} · {formatWhen(issue.publishedAt)}</p>
+      <SectionTag section="01" label="Letter" meta={formatWhen(issue.publishedAt)} />
+      <p className="kicker"><Crab /> {brand.newsletterName}</p>
       <article className="prose" dangerouslySetInnerHTML={{ __html: html }} />
     </main>
   );

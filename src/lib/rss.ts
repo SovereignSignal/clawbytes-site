@@ -1,6 +1,6 @@
 import { brand } from '@/config/brand';
 import { xmlEscape } from '@/lib/format';
-import type { IssueView, ItemView } from '@/lib/queries';
+import { eventAt, type IssueView, type ItemView } from '@/lib/queries';
 import { siteUrl } from '@/lib/site-url';
 
 export function buildItemFeed(rows: ItemView[]): string {
@@ -8,7 +8,7 @@ export function buildItemFeed(rows: ItemView[]): string {
   const entries = rows
     .map((item) => {
       const link = `${base}/items/${item.id}`;
-      const when = (item.publishedAt ?? item.createdAt).toUTCString();
+      const when = eventAt(item).toUTCString();
       const description = item.summary ?? item.title;
       return [
         '    <item>',

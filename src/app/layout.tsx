@@ -1,27 +1,61 @@
 import type { Metadata, Viewport } from 'next';
-import Link from 'next/link';
-import { brand, publicWires } from '@/config/brand';
-import { Mark } from '@/components/Mark';
+import { Bricolage_Grotesque, IBM_Plex_Mono, IBM_Plex_Sans, Press_Start_2P } from 'next/font/google';
+import Script from 'next/script';
+import { PNWParallaxBg } from '@/components/PNWParallaxBg';
+import { SiteFooter } from '@/components/SiteFooter';
+import { SiteHeader } from '@/components/SiteHeader';
+import { brand } from '@/config/brand';
 import { includeSampleData } from '@/lib/samples';
 import { siteUrl } from '@/lib/site-url';
 import './globals.css';
 
-export const dynamic = 'force-dynamic';
+const sans = IBM_Plex_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-sans',
+  display: 'swap',
+});
 
-const nav = [
-  { href: '/', label: 'Latest' },
-  { href: '/tools', label: 'Tools' },
-  { href: '/models', label: 'Models' },
-  { href: '/repos', label: 'Repos' },
-  { href: '/issues', label: 'Newsletter' },
-  { href: '/archive', label: 'Archive' },
-  { href: '/search', label: 'Search' },
-];
+const mono = IBM_Plex_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  variable: '--font-mono',
+  display: 'swap',
+});
+
+const display = Bricolage_Grotesque({
+  subsets: ['latin'],
+  weight: ['500', '600', '700', '800'],
+  variable: '--font-display',
+  display: 'swap',
+});
+
+const pixel = Press_Start_2P({
+  subsets: ['latin'],
+  weight: '400',
+  variable: '--font-pixel',
+  display: 'swap',
+});
+
+const themeBoot = `(function(){try{if(localStorage.getItem('clawbytes-theme')==='light'){document.documentElement.classList.add('light');document.documentElement.classList.remove('dark');}}catch(e){}})();`;
+
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
   title: { default: brand.name, template: `%s · ${brand.name}` },
   description: brand.description,
+  openGraph: {
+    title: brand.name,
+    description: brand.description,
+    siteName: brand.name,
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: brand.name,
+    description: brand.description,
+  },
   alternates: {
     types: {
       'application/rss+xml': [
@@ -32,54 +66,38 @@ export const metadata: Metadata = {
   },
 };
 
-export const viewport: Viewport = { colorScheme: 'light dark' };
+export const viewport: Viewport = {
+  colorScheme: 'dark light',
+  themeColor: '#121b2b',
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const samples = includeSampleData();
   const production = process.env.NODE_ENV === 'production';
   return (
-    <html lang="en">
+    <html
+      lang="en"
+      className={`dark ${sans.variable} ${mono.variable} ${display.variable} ${pixel.variable}`}
+      suppressHydrationWarning
+    >
       <body>
+        <Script id="clawbytes-theme" strategy="beforeInteractive">
+          {themeBoot}
+        </Script>
         <a className="skip" href="#content">Skip to content</a>
-        <header className="site-header">
-          <div className="wrap masthead">
-            <Link href="/" className="wordmark" aria-label={`${brand.name} home`}>
-              <Mark />
-              <span>{brand.name}</span>
-            </Link>
-            <p className="byline">{brand.byline}</p>
-          </div>
-          <nav className="wrap nav" aria-label="Primary">
-            {nav.map((item) => (
-              <Link key={item.href} href={item.href}>{item.label}</Link>
-            ))}
-          </nav>
-        </header>
-        {samples ? (
-          <p className="wrap banner">
-            {production
-              ? 'SEED=1 is on, so sample rows are visible.'
-              : 'Sample rows are included outside production. They stay hidden in production unless SEED=1.'}
-          </p>
-        ) : null}
-        <div className="wrap" id="content">{children}</div>
-        <footer className="site-footer">
-          <div className="wrap">
-            <p>{brand.name} is the curated tier on top of the Telegram wires. {brand.byline}.</p>
-            <p className="footer-links">
-              {publicWires().map((wire, index) => (
-                <span key={wire.id}>
-                  {index > 0 ? ' · ' : null}
-                  <a href={wire.joinUrl}>{wire.channelLabel}</a>
-                </span>
-              ))}
-              {' · '}
-              <a href="/feed.xml">Items RSS</a>
-              {' · '}
-              <a href="/issues/feed.xml">Newsletter RSS</a>
+        <PNWParallaxBg />
+        <div className="site-shell">
+          <SiteHeader />
+          {samples ? (
+            <p className="wrap banner">
+              {production
+                ? 'SEED=1 is on, so sample rows are visible.'
+                : 'Sample rows are included outside production. They stay hidden in production unless SEED=1.'}
             </p>
-          </div>
-        </footer>
+          ) : null}
+          <div className="wrap" id="content">{children}</div>
+          <SiteFooter />
+        </div>
       </body>
     </html>
   );
