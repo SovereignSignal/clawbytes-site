@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 import type { Db } from '@/db/client';
 import { appearances, items } from '@/db/schema';
@@ -386,4 +386,71 @@ async function applyOne(
       .where(eq(items.id, row.id));
   }
   return 'upserted';
+}
+
+function uniqueInOrder(keys: string[]): string[] {
+  const seen = new Set<string>();
+  const unique: string[] = [];
+  for (const key of keys) {
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push(key);
+  }
+  return unique;
+}
+
+export function parseDeleteKeys(
+  body: unknown,
+): { ok: true; keys: string[] } | { ok: false; errors: IngestError[] } {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return { ok: false, errors: [{ index: null, messages: ['body must be a JSON object'] }] };
+  }
+  const raw = (body as Record<string, unknown>).canonical_keys;
+  if (!Array.isArray(raw)) {
+    return { ok: false, errors: [{ index: null, messages: ['canonical_keys must be an array'] }] };
+  }
+  if (raw.length > 100) {
+    return { ok: false, errors: [{ index: null, messages: ['batch exceeds 100 keys'] }] };
+  }
+  const errors: IngestError[] = [];
+  const keys: string[] = [];
+  raw.forEach((value, index) => {
+    if (typeof value !== 'string' || value.length < 1 || value.length > 300) {
+      errors.push({
+        index,
+        messages: ['canonical_keys entries must be strings of 1 to 300 characters'],
+      });
+      return;
+    }
+    keys.push(value);
+  });
+  if (errors.length) return { ok: false, errors };
+  return { ok: true, keys: uniqueInOrder(keys) };
+}
+
+export type DeleteCounts = { deleted: string[]; notFound: string[] };
+
+/** Deletes items and their appearances. Keys are matched exactly. A dry run only reports. */
+export async function deleteItemsByKey(
+  db: Db,
+  keys: string[],
+  options?: { dryRun?: boolean },
+): Promise<DeleteCounts> {
+  const unique = uniqueInOrder(keys);
+  if (!unique.length) return { deleted: [], notFound: [] };
+  return db.transaction(async (tx) => {
+    const rows = await tx
+      .select({ id: items.id, canonicalKey: items.canonicalKey })
+      .from(items)
+      .where(inArray(items.canonicalKey, unique));
+    const found = new Set(rows.map((row) => row.canonicalKey));
+    const deleted = unique.filter((key) => found.has(key));
+    const notFound = unique.filter((key) => !found.has(key));
+    if (!options?.dryRun && rows.length) {
+      const ids = rows.map((row) => row.id);
+      await tx.delete(appearances).where(inArray(appearances.itemId, ids));
+      await tx.delete(items).where(inArray(items.id, ids));
+    }
+    return { deleted, notFound };
+  });
 }

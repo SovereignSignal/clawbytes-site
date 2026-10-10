@@ -1,12 +1,12 @@
 import type { Metadata, Viewport } from 'next';
 import { Bricolage_Grotesque, IBM_Plex_Mono, IBM_Plex_Sans, Press_Start_2P } from 'next/font/google';
-import Script from 'next/script';
 import { PNWParallaxBg } from '@/components/PNWParallaxBg';
 import { SiteFooter } from '@/components/SiteFooter';
 import { SiteHeader } from '@/components/SiteHeader';
 import { brand } from '@/config/brand';
 import { includeSampleData } from '@/lib/samples';
 import { siteUrl } from '@/lib/site-url';
+import { themeBootScript } from '@/lib/theme';
 import './globals.css';
 
 const sans = IBM_Plex_Sans({
@@ -37,8 +37,6 @@ const pixel = Press_Start_2P({
   display: 'swap',
 });
 
-const themeBoot = `(function(){try{if(localStorage.getItem('clawbytes-theme')==='light'){document.documentElement.classList.add('light');document.documentElement.classList.remove('dark');}}catch(e){}})();`;
-
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
@@ -68,7 +66,10 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   colorScheme: 'dark light',
-  themeColor: '#121b2b',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#faf9f4' },
+    { media: '(prefers-color-scheme: dark)', color: '#121b2b' },
+  ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -77,13 +78,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`dark ${sans.variable} ${mono.variable} ${display.variable} ${pixel.variable}`}
+      className={`${sans.variable} ${mono.variable} ${display.variable} ${pixel.variable}`}
       suppressHydrationWarning
     >
       <body>
-        <Script id="clawbytes-theme" strategy="beforeInteractive">
-          {themeBoot}
-        </Script>
+        <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
         <a className="skip" href="#content">Skip to content</a>
         <PNWParallaxBg />
         <div className="site-shell">

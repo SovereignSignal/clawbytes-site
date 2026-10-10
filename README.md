@@ -6,7 +6,7 @@ The name lives in [`src/config/brand.ts`](src/config/brand.ts). The git repo sta
 
 | Wire | What it covers | Join |
 |---|---|---|
-| Tools | Coding agents and AI dev tools. Lanes: Ship, Watch, Read, Community. | https://t.me/clawbytes |
+| Tools | Coding agents, AI dev tools, and status-page incidents. Lanes: Ship, Watch, Read, Community. | https://t.me/clawbytes |
 | Models | New AI models, all modalities, five tiers (ModelBytes). | https://t.me/ModelBytes |
 | Repos | Trending GitHub repos by theme (interesting-repos). | https://t.me/interestingrepos |
 | Releases | Private Release Bot. Items show on Tools. No public join link. | — |
@@ -38,7 +38,7 @@ Stack: Next.js (App Router, TypeScript), Postgres, Drizzle migrations, Zod on th
 |---|---|
 | `/` | Latest items and the latest published issue, plus join links |
 | `/models` | `kind=model`, filter by modality and org, newest first |
-| `/tools` | Tool releases, plus news from ClawBytes, grouped by org |
+| `/tools` | Tool releases, ClawBytes news, and status-page incidents, grouped by org |
 | `/repos` | `kind=repo`, grouped by theme (`lane`) |
 | `/archive` | Every public item |
 | `/items/[id]` | One item: source link and the Telegram posts it appeared in |
@@ -118,6 +118,8 @@ curl -sS -X POST "$AI_WIRE_URL/api/ingest/items" \
 On each bot: `AI_WIRE_ENABLED` (default off), `AI_WIRE_URL`, `AI_WIRE_INGEST_TOKEN`. Push only after the Telegram post succeeds. Timeout 5 seconds, one retry, never fail the post. Log `ai_wire push ok n=` or `ai_wire push failed:`.
 
 The same `canonical_key` from two bots becomes one item with two appearances. Each appearance keeps that bot's lane, and the second bot does not replace the item lane. The same payload twice does not change the row.
+
+Removing rows is `DELETE /api/ingest/items` with the same bearer token and `{"canonical_keys":["..."]}`. `?dry_run=1` returns `deleted` and `not_found` and does not write. The route is not linked from the site.
 
 Newsletter issues can also be pushed to `POST /api/ingest/issues` (upsert on `slug`, status `draft` or `published`). A published issue cannot be moved back to draft through that endpoint. The weekly script does not use it.
 

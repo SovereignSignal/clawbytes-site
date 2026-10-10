@@ -17,7 +17,7 @@ export const brand = {
       id: 'tools',
       label: 'Tools',
       href: '/tools',
-      blurb: 'Coding agents and AI dev tools. Lanes: Ship, Watch, Read, Community.',
+      blurb: 'Coding agents, AI dev tools, and status-page incidents. Lanes: Ship, Watch, Read, Community.',
       channelLabel: 'ClawBytes',
       joinUrl: 'https://t.me/clawbytes',
       handle: 't.me/clawbytes',

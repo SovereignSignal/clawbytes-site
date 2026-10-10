@@ -120,6 +120,12 @@ describe('crab personality', () => {
     expect(row).toContain('Demo model');
     expect(row).not.toContain(brand.mark);
 
+    const incident = renderToStaticMarkup(
+      <ItemList items={[{ ...sample, kind: 'status', title: 'API incident', sample: false, lane: 'Watch' }]} />,
+    );
+    expect(incident).toContain('<span class="chip">Status</span>');
+    expect(incident).toContain('API incident');
+
     const empty = renderToStaticMarkup(<ItemList items={[]} empty="Nothing here yet." />);
     expect(empty).toContain(brand.mark);
     expect(empty).toContain('Nothing here yet.');
