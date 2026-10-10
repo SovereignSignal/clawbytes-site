@@ -17,12 +17,33 @@ const KEY_PREFIX: Record<(typeof KINDS)[number], string> = {
   paper: 'url:',
 };
 
-const isoTimestamp = z.string().refine((value) => {
-  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value)) {
-    return false;
+/** ISO 8601 timestamp, or YYYY-MM-DD taken as 00:00 UTC. Returns the value to store. */
+export function wireTimestamp(value: string): string | null {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const date = new Date(`${value}T00:00:00.000Z`);
+    if (Number.isNaN(date.getTime())) return null;
+    if (date.toISOString().slice(0, 10) !== value) return null;
+    return date.toISOString();
   }
-  return !Number.isNaN(Date.parse(value));
-}, 'must be an ISO 8601 timestamp');
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value)) {
+    return null;
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return value;
+}
+
+const isoTimestamp = z.string().transform((value, ctx) => {
+  const parsed = wireTimestamp(value);
+  if (!parsed) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'must be an ISO 8601 timestamp or YYYY-MM-DD',
+    });
+    return z.NEVER;
+  }
+  return parsed;
+});
 
 function httpUrl(value: string): boolean {
   try {
@@ -41,7 +62,10 @@ export const itemSchema = z
       .string()
       .min(3)
       .max(300)
-      .regex(/^[a-z0-9][a-z0-9:_./@+-]*$/, 'must be lowercase and stable'),
+      .regex(
+        /^[A-Za-z0-9][A-Za-z0-9:/._~@?#[\]!$&'()*+,;=%_+-]*$/,
+        'must use letters, numbers, and URL characters',
+      ),
     title: z.string().trim().min(1).max(300),
     url: z.string().refine(httpUrl, 'must be an http(s) URL'),
     summary: z.string().trim().max(600).nullish(),
@@ -92,7 +116,7 @@ function messagesOf(error: z.ZodError): string[] {
 
 export function parseItemBatch(
   body: unknown,
-): { ok: true; items: ItemInput[] } | { ok: false; errors: IngestError[] } {
+): { ok: true; items: ItemInput[]; errors: IngestError[] } | { ok: false; errors: IngestError[] } {
   if (!body || typeof body !== 'object' || Array.isArray(body)) {
     return { ok: false, errors: [{ index: null, messages: ['body must be a JSON object'] }] };
   }
@@ -124,14 +148,15 @@ export function parseItemBatch(
     }
     itemsOut.push(normalizeItem(parsed.data));
   });
-  if (errors.length) return { ok: false, errors };
-  return { ok: true, items: itemsOut };
+  if (errors.length && itemsOut.length === 0) return { ok: false, errors };
+  return { ok: true, items: itemsOut, errors };
 }
 
 function normalizeItem(item: ItemInput): ItemInput {
   const tags = item.tags ? [...new Set(item.tags)] : item.tags;
   const summary = item.summary?.trim() ? item.summary.trim() : null;
-  return { ...item, tags, summary };
+  // The key and URL are stored as sent. Query and fragment distinguish stories.
+  return { ...item, canonical_key: item.canonical_key, url: item.url, tags, summary };
 }
 
 function asObject(value: unknown): Record<string, unknown> {

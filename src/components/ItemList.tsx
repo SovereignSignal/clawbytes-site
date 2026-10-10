@@ -1,13 +1,22 @@
 import Link from 'next/link';
+import { Empty } from '@/components/Empty';
 import { botName, formatScore, formatWhen, kindLabel } from '@/lib/format';
-import type { ItemView } from '@/lib/queries';
+import { eventAt, type ItemView } from '@/lib/queries';
 
-export function ItemList({ items, empty = 'Nothing here yet.' }: { items: ItemView[]; empty?: string }) {
-  if (!items.length) return <p className="empty">{empty}</p>;
+export function ItemList({
+  items,
+  empty = 'Nothing here yet.',
+  titleAs = 'h3',
+}: {
+  items: ItemView[];
+  empty?: string;
+  titleAs?: 'h1' | 'h3';
+}) {
+  if (!items.length) return <Empty>{empty}</Empty>;
   return (
     <ol className="item-list">
       {items.map((item) => {
-        const when = formatWhen(item.publishedAt ?? item.createdAt);
+        const when = formatWhen(eventAt(item));
         const lanes = [
           ...new Set(
             item.appearances
@@ -19,6 +28,7 @@ export function ItemList({ items, empty = 'Nothing here yet.' }: { items: ItemVi
         const bots = [...new Set(item.appearances.map((appearance) => appearance.sourceBot))];
         const posts = item.appearances.filter((appearance) => appearance.channelPostUrl);
         const score = formatScore(item.score);
+        const Title = titleAs;
         return (
           <li key={item.id} className="item">
             <div className="item-meta">
@@ -33,9 +43,9 @@ export function ItemList({ items, empty = 'Nothing here yet.' }: { items: ItemVi
               {bots.length > 1 ? <span className="chip">On {bots.length} wires</span> : null}
               {item.sample ? <span className="chip">Sample</span> : null}
             </div>
-            <h3>
+            <Title>
               <a href={item.url} rel="noreferrer">{item.title}</a>
-            </h3>
+            </Title>
             {item.summary ? <p className="summary">{item.summary}</p> : null}
             <div className="item-links">
               <a href={item.url} rel="noreferrer">Source</a>

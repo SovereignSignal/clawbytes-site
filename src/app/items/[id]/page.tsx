@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ItemList } from '@/components/ItemList';
+import { SectionTag } from '@/components/SectionTag';
 import { getItem } from '@/lib/queries';
 import { includeSampleData } from '@/lib/samples';
 
@@ -24,8 +25,9 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
   if (!item) notFound();
   return (
     <main>
+      <SectionTag section="01" label="Registry" meta="Item" />
       <p className="kicker"><Link href="/archive">Archive</Link></p>
-      <ItemList items={[item]} />
+      <ItemList items={[item]} titleAs="h1" />
     </main>
   );
 }

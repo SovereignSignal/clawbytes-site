@@ -5,6 +5,8 @@
  */
 export const brand = {
   name: 'ClawBytes',
+  /** Decorative mark. Screen readers skip it; the name stays the accessible label. */
+  mark: '🦀',
   newsletterName: 'ClawBytes Weekly',
   byline: 'A Sovereign Signal project',
   tagline: 'The curated tier of the AI wires.',

@@ -38,10 +38,10 @@ describe('item ingest', () => {
     expect(await db.select().from(items)).toHaveLength(0);
   });
 
-  it('lists validation errors per item and writes nothing', async () => {
+  it('writes the valid items when one item in the batch is invalid', async () => {
     const response = await post({
       items: [
-        item(),
+        item({ published_at: '2026-08-01', posted_at: '2026-08-02' }),
         item({
           canonical_key: 'MODEL:bad',
           title: '',
@@ -50,13 +50,52 @@ describe('item ingest', () => {
         }),
       ],
     });
-    expect(response.status).toBe(400);
-    const body = (await response.json()) as { errors: Array<{ index: number; messages: string[] }> };
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      created: number;
+      keys: string[];
+      errors: Array<{ index: number; messages: string[] }>;
+    };
+    expect(body.created).toBe(1);
+    expect(body.keys).toEqual(['model:anthropic/claude-haiku-5.5']);
     expect(body.errors.map((error) => error.index)).toEqual([1]);
     expect(body.errors[0]?.messages.join(' ')).toMatch(/canonical_key/);
     expect(body.errors[0]?.messages.join(' ')).toMatch(/title/);
     expect(body.errors[0]?.messages.join(' ')).toMatch(/summary/);
+    const rows = await db.select().from(items);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.publishedAt?.toISOString()).toBe('2026-08-01T00:00:00.000Z');
+    const apps = await db.select().from(appearances);
+    expect(apps[0]?.postedAt?.toISOString()).toBe('2026-08-02T00:00:00.000Z');
+  });
+
+  it('writes nothing when every item is invalid', async () => {
+    const response = await post({ items: [item({ title: '', published_at: '2026-02-31' })] });
+    expect(response.status).toBe(400);
     expect(await db.select().from(items)).toHaveLength(0);
+  });
+
+  it('stores url keys that differ by query, fragment, or tilde as different items', async () => {
+    const plain = 'https://example.com/~notes/story';
+    const keys = [`url:${plain}`, `url:${plain}?utm=1`, `url:${plain}#section`];
+    const response = await post({
+      items: keys.map((canonical_key, index) =>
+        item({
+          kind: 'news',
+          canonical_key,
+          url: canonical_key.slice(4),
+          title: `Story ${index}`,
+          modality: null,
+          published_at: '2026-04-02',
+          posted_at: '2026-04-03',
+        }),
+      ),
+    });
+    expect(response.status).toBe(200);
+    const rows = await db.select().from(items);
+    expect(rows.map((row) => row.canonicalKey).sort()).toEqual([...keys].sort());
+    expect(rows.map((row) => row.url).sort()).toEqual([plain, `${plain}?utm=1`, `${plain}#section`].sort());
+    expect(new Set(rows.map((row) => row.publishedAt?.toISOString()))).toEqual(new Set(['2026-04-02T00:00:00.000Z']));
   });
 
   it('rejects a batch over 100', async () => {

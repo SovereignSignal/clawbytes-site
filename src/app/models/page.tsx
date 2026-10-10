@@ -1,6 +1,8 @@
 import { ItemList } from '@/components/ItemList';
+import { PageHeader } from '@/components/PageHeader';
+import { Pager } from '@/components/Pager';
 import { MODALITIES } from '@/lib/ingest/items';
-import { listModelFacets, listModels } from '@/lib/queries';
+import { listModelFacets, listModels, pageNumber } from '@/lib/queries';
 import { safeQuery } from '@/lib/safe';
 import { includeSampleData } from '@/lib/samples';
 
@@ -11,21 +13,27 @@ export const metadata = { title: 'Models' };
 export default async function ModelsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ modality?: string; org?: string }>;
+  searchParams: Promise<{ modality?: string; org?: string; lane?: string; page?: string }>;
 }) {
   const params = await searchParams;
   const modality = MODALITIES.find((entry) => entry === params.modality);
   const org = params.org?.trim() ?? '';
+  const lane = params.lane?.trim() || undefined;
+  const page = pageNumber(params.page);
   const samples = includeSampleData();
-  const [rows, facets] = await Promise.all([
-    safeQuery(() => listModels(samples, { modality, org }), []),
-    safeQuery(() => listModelFacets(samples), { orgs: [], modalities: [] }),
+  const [result, facets] = await Promise.all([
+    safeQuery(() => listModels(samples, { modality, org, lane, page }), { items: [], hasMore: false }),
+    safeQuery(() => listModelFacets(samples), { orgs: [], modalities: [], lanes: [] }),
   ]);
 
   return (
     <main>
-      <h1>Models</h1>
-      <p className="dek">New models from ModelBytes, every modality, sorted by date.</p>
+      <PageHeader
+        section="01"
+        kicker="ModelBytes"
+        title="Models"
+        dek="New models from ModelBytes, every modality, sorted by date."
+      />
       <form className="filters" action="/models" method="get">
         <label>
           Modality
@@ -45,9 +53,19 @@ export default async function ModelsPage({
             ))}
           </datalist>
         </label>
+        <label>
+          Lane
+          <select name="lane" defaultValue={lane ?? ''}>
+            <option value="">All</option>
+            {(lane && !facets.lanes.includes(lane) ? [...facets.lanes, lane] : facets.lanes).map((name) => (
+              <option key={name} value={name}>{name}</option>
+            ))}
+          </select>
+        </label>
         <button type="submit">Filter</button>
       </form>
-      <ItemList items={rows} empty="No models match." />
+      <ItemList items={result.items} empty="No models match." />
+      <Pager page={page} hasMore={result.hasMore} path="/models" params={{ modality, org, lane }} />
     </main>
   );
 }

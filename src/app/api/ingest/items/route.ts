@@ -24,12 +24,15 @@ export async function POST(req: Request): Promise<Response> {
     return Response.json({ errors: parsed.errors }, { status: 400 });
   }
   try {
-    const result = await applyItemBatch(getDb(), parsed.items);
-    revalidateItems();
+    const result = parsed.items.length
+      ? await applyItemBatch(getDb(), parsed.items)
+      : { created: 0, upserted: 0, keys: [] as string[] };
+    if (parsed.items.length) revalidateItems();
     return Response.json({
       upserted: result.upserted,
       created: result.created,
       keys: result.keys,
+      ...(parsed.errors.length ? { errors: parsed.errors } : {}),
     });
   } catch (err) {
     console.error('[ai-wire] item ingest failed:', err);

@@ -42,6 +42,69 @@ export type IssueView = {
 
 const PAGE_SIZE = 40;
 
+/** published_at, else the earliest appearance posted_at, else created_at. */
+const eventOrder = sql`coalesce(${items.publishedAt}, (select min(${appearances.postedAt}) from ${appearances} where ${appearances.itemId} = ${items.id}), ${items.createdAt})`;
+
+export function pageNumber(value: number | string | undefined): number {
+  const page = typeof value === 'number' ? value : Number(value ?? '1');
+  if (!Number.isFinite(page) || page < 1) return 1;
+  return Math.floor(page);
+}
+
+function resolvePageSize(value: number | undefined): number {
+  if (!value || !Number.isFinite(value)) return PAGE_SIZE;
+  return Math.min(200, Math.max(1, Math.floor(value)));
+}
+
+/** The time readers should see, and the time lists sort by. */
+export function eventAt(item: {
+  publishedAt: Date | null;
+  createdAt: Date;
+  appearances: Array<{ postedAt: Date | null }>;
+}): Date {
+  if (item.publishedAt && !Number.isNaN(item.publishedAt.getTime())) return item.publishedAt;
+  let earliest: Date | null = null;
+  for (const appearance of item.appearances) {
+    const posted = appearance.postedAt;
+    if (!posted || Number.isNaN(posted.getTime())) continue;
+    if (!earliest || posted.getTime() < earliest.getTime()) earliest = posted;
+  }
+  return earliest ?? item.createdAt;
+}
+
+function laneMatch(lane: string | undefined): SQL | undefined {
+  const value = lane?.trim();
+  if (!value) return undefined;
+  return or(
+    eq(items.lane, value),
+    inArray(
+      items.id,
+      db()
+        .select({ itemId: appearances.itemId })
+        .from(appearances)
+        .where(eq(appearances.lane, value)),
+    ),
+  );
+}
+
+async function listWhere(
+  where: SQL | undefined,
+  page: number | undefined,
+  pageSize?: number,
+): Promise<{ items: ItemView[]; hasMore: boolean }> {
+  const size = resolvePageSize(pageSize);
+  const safePage = pageNumber(page);
+  const rows = await db()
+    .select()
+    .from(items)
+    .where(where)
+    .orderBy(sql`${eventOrder} desc`)
+    .limit(size + 1)
+    .offset((safePage - 1) * size);
+  const hasMore = rows.length > size;
+  return { items: await withAppearances(rows.slice(0, size)), hasMore };
+}
+
 function asDate(value: Date | string | null | undefined): Date | null {
   if (!value) return null;
   if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
@@ -134,58 +197,62 @@ export async function listLatest(samples: boolean, limit = 25): Promise<ItemView
     .select()
     .from(items)
     .where(sampleFilter(samples))
-    .orderBy(sql`coalesce(${items.publishedAt}, ${items.createdAt}) desc`)
+    .orderBy(sql`${eventOrder} desc`)
     .limit(limit);
   return withAppearances(rows);
 }
 
 export async function listArchive(samples: boolean, page: number): Promise<{ items: ItemView[]; hasMore: boolean }> {
-  const safePage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
-  const rows = await db()
-    .select()
-    .from(items)
-    .where(sampleFilter(samples))
-    .orderBy(sql`coalesce(${items.publishedAt}, ${items.createdAt}) desc`)
-    .limit(PAGE_SIZE + 1)
-    .offset((safePage - 1) * PAGE_SIZE);
-  const hasMore = rows.length > PAGE_SIZE;
-  return { items: await withAppearances(rows.slice(0, PAGE_SIZE)), hasMore };
+  return listWhere(sampleFilter(samples), page);
 }
+
+export type ListFilters = {
+  modality?: string;
+  org?: string;
+  lane?: string;
+  page?: number;
+  pageSize?: number;
+};
 
 export async function listModels(
   samples: boolean,
-  filters: { modality?: string; org?: string },
-): Promise<ItemView[]> {
+  filters: ListFilters = {},
+): Promise<{ items: ItemView[]; hasMore: boolean }> {
   const org = filters.org?.trim();
-  const rows = await db()
-    .select()
-    .from(items)
-    .where(
-      andWhere(
-        sampleFilter(samples),
-        eq(items.kind, 'model'),
-        filters.modality ? eq(items.modality, filters.modality) : undefined,
-        org ? ilike(items.org, `%${escapeLike(org)}%`) : undefined,
-      ),
-    )
-    .orderBy(sql`${items.publishedAt} desc nulls last`, desc(items.createdAt))
-    .limit(200);
-  return withAppearances(rows);
+  return listWhere(
+    andWhere(
+      sampleFilter(samples),
+      eq(items.kind, 'model'),
+      filters.modality ? eq(items.modality, filters.modality) : undefined,
+      org ? ilike(items.org, `%${escapeLike(org)}%`) : undefined,
+      laneMatch(filters.lane),
+    ),
+    filters.page,
+    filters.pageSize,
+  );
 }
 
-export async function listModelFacets(samples: boolean): Promise<{ orgs: string[]; modalities: string[] }> {
+export async function listModelFacets(
+  samples: boolean,
+): Promise<{ orgs: string[]; modalities: string[]; lanes: string[] }> {
   const rows = await db()
-    .select({ org: items.org, modality: items.modality })
+    .select({ org: items.org, modality: items.modality, lane: items.lane })
     .from(items)
     .where(andWhere(sampleFilter(samples), eq(items.kind, 'model')));
   const orgs = [...new Set(rows.map((row) => row.org).filter((org): org is string => Boolean(org)))].sort((a, b) =>
     a.localeCompare(b),
   );
   const modalities = [...new Set(rows.map((row) => row.modality).filter((value): value is string => Boolean(value)))];
-  return { orgs, modalities };
+  const lanes = [...new Set(rows.map((row) => row.lane).filter((lane): lane is string => Boolean(lane)))].sort((a, b) =>
+    a.localeCompare(b),
+  );
+  return { orgs, modalities, lanes };
 }
 
-export async function listTools(samples: boolean): Promise<ItemView[]> {
+export async function listTools(
+  samples: boolean,
+  filters: ListFilters = {},
+): Promise<{ items: ItemView[]; hasMore: boolean }> {
   const clawbytesNews = inArray(
     items.id,
     db()
@@ -193,34 +260,26 @@ export async function listTools(samples: boolean): Promise<ItemView[]> {
       .from(appearances)
       .where(eq(appearances.sourceBot, 'clawbytes')),
   );
-  const rows = await db()
-    .select()
-    .from(items)
-    .where(
-      andWhere(
-        sampleFilter(samples),
-        or(eq(items.kind, 'tool_release'), and(eq(items.kind, 'news'), clawbytesNews)),
-      ),
-    )
-    .orderBy(sql`${items.publishedAt} desc nulls last`, desc(items.createdAt))
-    .limit(200);
-  return withAppearances(rows);
+  return listWhere(
+    andWhere(
+      sampleFilter(samples),
+      or(eq(items.kind, 'tool_release'), and(eq(items.kind, 'news'), clawbytesNews)),
+      laneMatch(filters.lane),
+    ),
+    filters.page,
+    filters.pageSize,
+  );
 }
 
-export async function listRepos(samples: boolean, theme?: string): Promise<ItemView[]> {
-  const rows = await db()
-    .select()
-    .from(items)
-    .where(
-      andWhere(
-        sampleFilter(samples),
-        eq(items.kind, 'repo'),
-        theme ? eq(items.lane, theme) : undefined,
-      ),
-    )
-    .orderBy(sql`${items.publishedAt} desc nulls last`, desc(items.createdAt))
-    .limit(200);
-  return withAppearances(rows);
+export async function listRepos(
+  samples: boolean,
+  filters: ListFilters = {},
+): Promise<{ items: ItemView[]; hasMore: boolean }> {
+  return listWhere(
+    andWhere(sampleFilter(samples), eq(items.kind, 'repo'), laneMatch(filters.lane)),
+    filters.page,
+    filters.pageSize,
+  );
 }
 
 export async function listRepoThemes(samples: boolean): Promise<string[]> {
@@ -233,28 +292,32 @@ export async function listRepoThemes(samples: boolean): Promise<string[]> {
   );
 }
 
-export async function searchItems(samples: boolean, query: string): Promise<ItemView[]> {
+export async function searchItems(
+  samples: boolean,
+  query: string,
+  filters: ListFilters = {},
+): Promise<{ items: ItemView[]; hasMore: boolean }> {
   const q = query.trim().slice(0, 200);
-  if (!q) return [];
-  const pattern = `%${escapeLike(q)}%`;
-  const rows = await db()
-    .select()
-    .from(items)
-    .where(
-      andWhere(
-        sampleFilter(samples),
-        or(
-          ilike(items.title, pattern),
-          ilike(items.summary, pattern),
-          ilike(items.org, pattern),
-          ilike(items.lane, pattern),
-          ilike(items.canonicalKey, pattern),
-        ),
-      ),
-    )
-    .orderBy(sql`coalesce(${items.publishedAt}, ${items.createdAt}) desc`)
-    .limit(50);
-  return withAppearances(rows);
+  const lane = filters.lane?.trim();
+  if (!q && !lane) return { items: [], hasMore: false };
+  const pattern = q ? `%${escapeLike(q)}%` : undefined;
+  return listWhere(
+    andWhere(
+      sampleFilter(samples),
+      pattern
+        ? or(
+            ilike(items.title, pattern),
+            ilike(items.summary, pattern),
+            ilike(items.org, pattern),
+            ilike(items.lane, pattern),
+            ilike(items.canonicalKey, pattern),
+          )
+        : undefined,
+      laneMatch(lane),
+    ),
+    filters.page,
+    filters.pageSize,
+  );
 }
 
 export async function getItem(id: string, samples: boolean): Promise<ItemView | null> {
