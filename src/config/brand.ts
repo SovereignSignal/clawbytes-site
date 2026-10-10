@@ -11,10 +11,11 @@ export const brand = {
   byline: 'A Sovereign Signal project',
   tagline: 'Where AI is heading.',
   description:
-    'ClawBytes is an opinionated signal on the agents, models, tools, and open-source repos worth knowing: what shipped, what matters, and where it\'s going.',
+    'Every week, the agents, models, tools and open-source repos worth your time: what shipped, what matters, and where it\'s all going.',
   about:
-    'ClawBytes tells you where AI is heading: which agents, models, tools, and repos are worth knowing.',
-  newsletterBlurb: 'One letter a week on what shipped, what matters, and where AI is going.',
+    'Every week, the agents, models, tools and open-source repos worth your time: what shipped, what matters, and where it\'s all going.',
+  newsletterBlurb:
+    'Every week, the agents, models, tools and open-source repos worth your time: what shipped, what matters, and where it\'s all going.',
   wires: [
     {
       id: 'tools',

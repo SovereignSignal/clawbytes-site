@@ -22,7 +22,7 @@ export function WireConsole() {
           <span className="live-dot" />
         </div>
         <div className="console-sub">
-          <span>Signal desk</span>
+          <span>Bytes desk</span>
           <span className="console-live">live</span>
         </div>
         <div className="console-cols">

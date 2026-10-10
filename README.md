@@ -1,6 +1,6 @@
 # ClawBytes
 
-ClawBytes is an opinionated signal on where AI is heading: the agents, models, tools, and open-source repos worth knowing. The site and ClawBytes Weekly say what shipped, what matters, and where it is going. Live feeds are one place to follow along.
+Every week, the agents, models, tools and open-source repos worth your time: what shipped, what matters, and where it's all going. Live feeds are one place to follow along.
 
 The name lives in [`src/config/brand.ts`](src/config/brand.ts). The git repo stays `ai-wire`. Ingest env vars stay `AI_WIRE_*`.
 
