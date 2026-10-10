@@ -1,0 +1,26 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+        env:
+          # Build must succeed with no database reachable.
+          DATABASE_URL: postgres://ci:ci@127.0.0.1:5432/ci
+          AI_WIRE_INGEST_TOKEN: ci-token
+          SITE_URL: http://localhost:3000
