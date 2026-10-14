@@ -6,3 +6,4 @@ exports/
 .env.*
 !.env.example
 *.tsbuildinfo
+.railway/.cac-migration.json

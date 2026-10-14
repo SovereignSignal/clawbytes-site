@@ -108,7 +108,7 @@ Do this by hand. Nothing in this repo deploys itself.
 3. Set `DATABASE_URL` to the Postgres service reference, plus `AI_WIRE_INGEST_TOKEN` and `SITE_URL`.
 4. `npm run start` migrates before `next start`, so a boot applies `drizzle/`.
 5. CI (`.github/workflows/ci.yml`) runs lint, typecheck, test, and build. Merge to `main` only when it is green. Point Railway at `main` if you want merges to deploy.
-6. The metrics cron is a second service. Setup is in [Health and metrics](#health-and-metrics). Leave this web service on `railway.json`.
+6. The metrics cron is a second service named `metrics`. Setup is in [Health and metrics](#health-and-metrics). Until the cutover in that section, this web service still reads `railway.json`.
 
 `GET /api/health` returns `{ok, ready, service, database}` and 503 when Postgres is unreachable.
 
@@ -150,26 +150,36 @@ Webhook body, only on failure:
 
 ### Railway cron service
 
-Do this after the web service is up. Nothing in the repo creates the service.
+The cron service is named `metrics`. It is already in the project, with `DATABASE_URL` and `SITE_URL` set. Do not create another service, and do not attach a public domain. No new variable is required.
 
-1. In the same Railway project, add a new service from this GitHub repo. It is a second service. Do not replace the website.
-2. Before the first deploy, or immediately after if it already started, set the service config file to `railway.metrics.json` (Settings → Config-as-code). Then redeploy. That file is what makes this service a cron instead of another copy of the site.
-3. Do not attach a public domain.
-4. Set variables on this service:
-   - `DATABASE_URL`: reference the same Postgres variable the web service uses.
-   - `SITE_URL`: the public origin of the web service, no trailing slash. The job calls `$SITE_URL/api/health`.
-   - `HEALTH_ALERT_WEBHOOK_URL`: leave unset until you want a POST when something is wrong.
-5. Leave `AI_WIRE_INGEST_TOKEN` on the web service. The cron does not use it. The assistant that calls `GET /api/metrics` does.
-6. Leave the web service on `railway.json` (`npm run start`, healthcheck `/api/health`). Do not put a cron schedule on it.
+Leave `HEALTH_ALERT_WEBHOOK_URL` unset until you want a POST when something is wrong. Leave `AI_WIRE_INGEST_TOKEN` on the web service. The cron does not use it. The assistant that calls `GET /api/metrics` does.
 
-`railway.metrics.json` sets:
+Railway will not accept a custom config-as-code path, so `metrics` cannot point at its own `railway.json`. Both services are declared in [`.railway/railway.ts`](.railway/railway.ts):
 
-| Setting | Value |
-|---|---|
-| Start command | `npm run metrics` |
-| Cron schedule | `0 8,12,16,20 * * *` |
-| Healthcheck | none |
-| Restart | on failure, up to 3 times |
+| Service | Start | Healthcheck | Cron | Restart |
+|---|---|---|---|---|
+| `web` | `npm run start` | `/api/health`, timeout 120 | none | on failure, up to 3 |
+| `metrics` | `npm run metrics` | none | `0 8,12,16,20 * * *` | on failure, up to 3 |
+
+Both use a Railpack build of `npm run build`. The website service in the dashboard is `web`.
+
+A git deploy does not read `.railway/railway.ts`. `railway.json` stays in the repo so the live web service keeps `npm run start` and `GET /api/health` until you hand management to Infrastructure as Code. Config as Code stops being read on 2026-12-01. Do this once, from a checkout of `main`, linked to the production environment. Run the three commands in one sitting. Cutover redeploys each declared service that still has a config-file path; apply has to follow before another deploy lands.
+
+```bash
+railway config migrate cutover
+railway config plan
+railway config apply
+```
+
+Read the plan before apply:
+
+- It deletes nothing. Postgres is not in the file. The file is partial `clawbytes-site`, and `variables.managed` is false, so `DATABASE_URL`, `SITE_URL`, and every other variable stay as they are.
+- `web` keeps the settings in the table above.
+- `metrics` gains the cron row in the table above.
+- If the plan says `Create service web`, stop. The website service has a different dashboard name. Rename `service("web")` to that name and plan again.
+- If the plan changes a GitHub repository, or removes a domain, stop. Both services should stay on `SovereignSignal/clawbytes-site`.
+
+After apply, `metrics` runs on that cron. Nothing else has to be set on it.
 
 The schedule is 08:00, 12:00, 16:00, and 20:00 UTC every day. Subscriber and yield rows are one per UTC day, so later runs that day refresh today's row and yesterday's. Health runs every time. A weekdays-only schedule (`0 8,12,16,20 * * 1-5`) skips Saturday and Sunday subscriber points.
 
