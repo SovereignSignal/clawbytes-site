@@ -1,4 +1,4 @@
-import { defineRailway, github, project, service } from "railway/iac";
+import { defineRailway, github, preserve, project, service } from "railway/iac";
 
 declare module "railway/iac" {
   interface ProjectDefinition {
@@ -41,6 +41,7 @@ export function railwayProject() {
     healthcheck: "/api/health",
     healthcheckTimeout: 120,
     deploy: restart,
+    variables: { AI_WIRE_INGEST_TOKEN: preserve(), DATABASE_URL: preserve(), SITE_URL: preserve() },
   });
 
   const metrics = service("metrics", {
@@ -51,6 +52,7 @@ export function railwayProject() {
       ...restart,
       cronSchedule: "0 8,12,16,20 * * *",
     },
+    variables: { DATABASE_URL: preserve(), SITE_URL: preserve() },
   });
 
   return project("clawbytes-site", {
