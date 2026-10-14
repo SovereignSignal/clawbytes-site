@@ -2,7 +2,7 @@
 
 Every week, the agents, models, tools and open-source repos worth your time: what shipped, what matters, and where it's all going. Live feeds are one place to follow along.
 
-The name lives in [`src/config/brand.ts`](src/config/brand.ts). The git repo stays `ai-wire`. Ingest env vars stay `AI_WIRE_*`.
+The name lives in [`src/config/brand.ts`](src/config/brand.ts). The git repo is `clawbytes-site` (formerly `ai-wire`). Ingest env vars stay `AI_WIRE_*`.
 
 | Section | Why it is here | Live feed |
 |---|---|---|
@@ -165,3 +165,7 @@ That flips `status` to `published`. The page is `/issues/week-2026-10-05`. Still
 | `npm run seed` | Sample items and one sample issue. |
 | `npm run newsletter:draft` | Draft for `--week YYYY-MM-DD`. |
 | `npm run newsletter:publish` | Publish `--slug`. |
+
+## License
+
+MIT. See [LICENSE](LICENSE).
