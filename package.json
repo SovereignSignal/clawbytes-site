@@ -17,7 +17,8 @@
     "db:migrate": "node scripts/migrate.mjs",
     "seed": "tsx scripts/seed.ts",
     "newsletter:draft": "tsx scripts/newsletter-draft.ts",
-    "newsletter:publish": "tsx scripts/newsletter-publish.ts"
+    "newsletter:publish": "tsx scripts/newsletter-publish.ts",
+    "metrics": "npm run db:migrate && tsx scripts/metrics.ts"
   },
   "dependencies": {
     "dotenv": "^16.5.0",
@@ -26,6 +27,7 @@
     "pg": "^8.16.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "tsx": "^4.20.3",
     "zod": "^3.25.67"
   },
   "devDependencies": {
@@ -37,7 +39,6 @@
     "@types/react-dom": "^19.1.6",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9.28.0",
-    "tsx": "^4.20.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.34.0",
     "vitest": "^3.2.4"

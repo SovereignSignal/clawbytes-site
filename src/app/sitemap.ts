@@ -13,7 +13,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     safeQuery(() => listArchive(samples, 1), { items: [], hasMore: false }),
     safeQuery(() => listPublishedIssues(samples), []),
   ]);
-  const staticPaths = ['', '/tools', '/models', '/repos', '/archive', '/issues', '/search'];
+  const staticPaths = ['', '/tools', '/models', '/repos', '/archive', '/issues', '/search', '/stats'];
   return [
     ...staticPaths.map((path) => ({ url: `${base}${path || '/'}` })),
     ...issues.map((issue) => ({ url: `${base}/issues/${issue.slug}` })),

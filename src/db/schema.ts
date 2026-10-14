@@ -1,4 +1,17 @@
-import { boolean, doublePrecision, index, jsonb, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  date,
+  doublePrecision,
+  index,
+  integer,
+  jsonb,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
 
 export const items = pgTable(
   'items',
@@ -65,6 +78,56 @@ export const issues = pgTable('issues', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull(),
 });
 
+/** One public t.me subscriber/member count per channel per UTC day. */
+export const telegramSubscriberDaily = pgTable(
+  'telegram_subscriber_daily',
+  {
+    channel: text('channel').notNull(),
+    day: date('day', { mode: 'string' }).notNull(),
+    memberCount: integer('member_count').notNull(),
+    scrapedAt: timestamp('scraped_at', { withTimezone: true }).notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.channel, table.day] })],
+);
+
+/** Posted appearances for one UTC day, grouped by source bot, channel, and lane. */
+export const sourceYieldDaily = pgTable(
+  'source_yield_daily',
+  {
+    day: date('day', { mode: 'string' }).notNull(),
+    sourceBot: text('source_bot').notNull(),
+    channel: text('channel').notNull(),
+    lane: text('lane').notNull(),
+    postedCount: integer('posted_count').notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.day, table.sourceBot, table.channel, table.lane] })],
+);
+
+/** Latest staleness reading per source bot. The cron replaces the row each run. */
+export const botHealth = pgTable('bot_health', {
+  sourceBot: text('source_bot').primaryKey(),
+  lastIngestAt: timestamp('last_ingest_at', { withTimezone: true }),
+  stale: boolean('stale').notNull(),
+  staleAfterHours: integer('stale_after_hours').notNull(),
+  checkedAt: timestamp('checked_at', { withTimezone: true }).notNull(),
+  detail: text('detail'),
+});
+
+/** Latest GET /api/health result. One row, id `site`. */
+export const siteHealth = pgTable('site_health', {
+  id: text('id').primaryKey(),
+  ok: boolean('ok').notNull(),
+  statusCode: integer('status_code'),
+  ready: boolean('ready'),
+  database: text('database'),
+  checkedAt: timestamp('checked_at', { withTimezone: true }).notNull(),
+  detail: text('detail'),
+});
+
 export type ItemRow = typeof items.$inferSelect;
 export type AppearanceRow = typeof appearances.$inferSelect;
 export type IssueRow = typeof issues.$inferSelect;
+export type TelegramSubscriberRow = typeof telegramSubscriberDaily.$inferSelect;
+export type SourceYieldRow = typeof sourceYieldDaily.$inferSelect;
+export type BotHealthRow = typeof botHealth.$inferSelect;
+export type SiteHealthRow = typeof siteHealth.$inferSelect;
