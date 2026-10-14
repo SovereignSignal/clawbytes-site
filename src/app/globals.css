@@ -458,7 +458,8 @@ h2 {
 .channel,
 .item,
 .issue-card,
-.console-frame {
+.console-frame,
+.stats-card {
   background: hsl(var(--card));
   color: hsl(var(--card-foreground));
   border: 2px solid hsl(var(--border));
@@ -692,6 +693,89 @@ button:hover { color: hsl(var(--primary-foreground)); filter: brightness(1.08); 
   border-radius: var(--radius);
 }
 
+.stats-grid {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.stats-card {
+  padding: 0.95rem 1rem 0.35rem;
+}
+
+.stats-card .handle { margin-top: 0.2rem; }
+
+.stats-top {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.stats-top strong {
+  font-family: var(--font-display), "Bricolage Grotesque", system-ui, sans-serif;
+  font-size: 1.2rem;
+}
+
+.stats-count {
+  margin: 0.45rem 0 0.15rem;
+  font-family: var(--font-display), "Bricolage Grotesque", system-ui, sans-serif;
+  font-size: clamp(2rem, 4vw, 2.6rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.stats-meta {
+  margin: 0 0 0.55rem;
+  color: hsl(var(--muted-foreground));
+  font-family: var(--font-mono), "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.78rem;
+}
+
+.stats-up { color: hsl(var(--good)); }
+.stats-down { color: hsl(var(--primary)); }
+
+.stats-spark {
+  display: block;
+  width: 100%;
+  height: 88px;
+  margin: 0 0 0.35rem;
+  color: hsl(var(--primary));
+}
+
+.stats-caption {
+  caption-side: bottom;
+  text-align: left;
+  padding: 0.45rem 0 0.15rem;
+  color: hsl(var(--muted-foreground));
+  font-family: var(--font-mono), "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.72rem;
+}
+
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono), "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.82rem;
+}
+
+.stats-table th,
+.stats-table td {
+  padding: 0.4rem 0;
+  border-bottom: 1px solid hsl(var(--border));
+  text-align: left;
+}
+
+.stats-table th:last-child,
+.stats-table td:last-child { text-align: right; }
+
+.stats-table th {
+  color: hsl(var(--muted-foreground));
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
 .pager {
   display: flex;
   justify-content: space-between;
@@ -884,6 +968,7 @@ button:hover { color: hsl(var(--primary-foreground)); filter: brightness(1.08); 
   .item,
   .issue-card,
   .console-frame,
+  .stats-card,
   .button,
   button {
     border: 1px solid CanvasText;

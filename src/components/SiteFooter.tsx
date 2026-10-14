@@ -29,6 +29,9 @@ export function SiteFooter() {
             <a href="/issues/feed.xml">
               <Crab /> Newsletter RSS
             </a>
+            <a href="/stats">
+              <Crab /> Subscriber counts
+            </a>
           </nav>
         </div>
       </div>
