@@ -1,16 +1,17 @@
 import { ItemList } from '@/components/ItemList';
 import { PageHeader } from '@/components/PageHeader';
 import { Pager } from '@/components/Pager';
+import { pageMetadata } from '@/lib/page-meta';
 import { pageNumber, searchItems } from '@/lib/queries';
 import { safeQuery } from '@/lib/safe';
 import { includeSampleData } from '@/lib/samples';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata = {
+export const metadata = pageMetadata('/search', {
   title: 'Search',
   description: 'Find an agent, model, tool, repo, or status incident on ClawBytes.',
-};
+});
 
 export default async function SearchPage({
   searchParams,

@@ -1,3 +1,7 @@
+/**
+ * @deprecated Drafting moved to Substack. These helpers stay so tests still load.
+ * Do not write a new issue from here.
+ */
 import { brand } from '@/config/brand';
 import { formatWhen } from '@/lib/format';
 import { rankItems, sectionIdsFor, type PublicSectionId, type RankableItem } from './rank';
@@ -176,6 +180,7 @@ function sectionBuckets(items: RankableItem[]): Array<{
     .filter((bucket) => bucket.total > 0);
 }
 
+/** @deprecated The digest is published on Substack. */
 export async function generateDraft(input: {
   items: RankableItem[];
   weekStart: Date;
@@ -239,6 +244,7 @@ export async function generateDraft(input: {
   };
 }
 
+/** @deprecated The digest is published on Substack. */
 export function draftBodies(draft: NewsletterDraft): { markdown: string; html: string } {
   return { markdown: renderMarkdown(draft), html: renderEmailHtml(draft) };
 }

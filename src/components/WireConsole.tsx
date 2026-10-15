@@ -48,7 +48,7 @@ export function WireConsole() {
         <div className="console-summary">
           <span><span className="console-key">TRACKS</span> {wires.length}</span>
           <span><span className="console-key">AHEAD</span> <span className="good">yes</span></span>
-          <span><span className="console-key">WEEKLY</span> <span className="good">on</span></span>
+          <span><span className="console-key">TWICE</span> <span className="good">on</span></span>
         </div>
       </div>
       <span className="console-cap cap-tl" />

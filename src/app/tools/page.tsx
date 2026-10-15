@@ -7,6 +7,7 @@ import { Pager } from '@/components/Pager';
 import { publicBlurb } from '@/config/brand';
 import { groupByOrg } from '@/lib/group';
 import { listingHref } from '@/lib/listing';
+import { pageMetadata } from '@/lib/page-meta';
 import { listTools, pageNumber } from '@/lib/queries';
 import { safeQuery } from '@/lib/safe';
 import { includeSampleData } from '@/lib/samples';
@@ -15,7 +16,7 @@ export const dynamic = 'force-dynamic';
 
 const toolsBlurb = publicBlurb('tools');
 
-export const metadata = { title: 'Tools', description: toolsBlurb };
+export const metadata = pageMetadata('/tools', { title: 'Tools', description: toolsBlurb });
 
 const lanes = ['Ship', 'Watch', 'Read', 'Community'];
 

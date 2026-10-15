@@ -1,16 +1,17 @@
 import Link from 'next/link';
 import { ItemList } from '@/components/ItemList';
 import { PageHeader } from '@/components/PageHeader';
+import { pageMetadata } from '@/lib/page-meta';
 import { listArchive } from '@/lib/queries';
 import { safeQuery } from '@/lib/safe';
 import { includeSampleData } from '@/lib/samples';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata = {
+export const metadata = pageMetadata('/archive', {
   title: 'Archive',
   description: 'The full ClawBytes log, newest first.',
-};
+});
 
 export default async function ArchivePage({
   searchParams,

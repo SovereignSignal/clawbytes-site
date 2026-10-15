@@ -1,6 +1,6 @@
 # ClawBytes
 
-Every week, the agents, models, tools and open-source repos worth your time: what shipped, what matters, and where it's all going. Live feeds are one place to follow along.
+Twice a week, the agents, models, tools and open-source repos worth your time: what shipped, what matters, and where it's all going. The digest is [ClawBytes on Sovereign Signal](https://sovereignsignal.substack.com/s/clawbytes). This site is the live backdrop it links to.
 
 The name lives in [`src/config/brand.ts`](src/config/brand.ts). The git repo is `clawbytes-site` (formerly `ai-wire`). Ingest env vars stay `AI_WIRE_*`.
 
@@ -31,7 +31,7 @@ Railway Postgres
 Railway cron (separate service, not the website)
 ```
 
-A weekly script reads that registry, ranks the week, and writes a **draft** issue plus a markdown file and an email-ready HTML file. It does not publish and it does not send mail. Publishing is a separate command.
+ClawBytes on Sovereign Signal is published twice a week on Substack. `npm run newsletter:draft` and `npm run newsletter:publish` do not write a draft or publish a row. They print the Substack address and exit. The issues tables stay in the database.
 
 A second Railway service runs the metrics cron against the same database. It counts public Telegram subscribers, scores what each bot posted, and checks that the bots and `/api/health` are still alive. It does not serve pages.
 
@@ -41,17 +41,16 @@ Stack: Next.js (App Router, TypeScript), Postgres, Drizzle migrations, Zod on th
 
 | Route | What it shows |
 |---|---|
-| `/` | Latest items, the latest published issue, and links to the live feeds |
+| `/` | Latest items, a subscribe link for the digest, and links to the live feeds |
 | `/models` | `kind=model`, filter by modality and org, newest first |
 | `/tools` | Agents, dev tools, releases, and status-page incidents, grouped by org |
 | `/repos` | `kind=repo`, grouped by theme (`lane`) |
 | `/archive` | The full log, newest first |
 | `/items/[id]` | One item: source link and the posts it appeared in |
 | `/search` | Title, summary, org, lane, canonical key |
-| `/issues`, `/issues/[slug]` | Published issues of ClawBytes Weekly. Drafts stay off the site |
+| `/issues`, `/issues/[slug]` | Redirect to the ClawBytes section on Substack |
 | `/stats` | Subscriber counts for the three public Telegram feeds |
 | `/feed.xml` | RSS of items |
-| `/issues/feed.xml` | RSS of published issues |
 | `/api/health` | Readiness. Railway uses this |
 | `/api/metrics` | Bearer token. Subscribers, yield, and health. Not linked from the site |
 
@@ -86,18 +85,10 @@ Set these on the Railway web service:
 | `DATABASE_URL` | yes | Postgres. On Railway, reference the Postgres service variable. |
 | `AI_WIRE_INGEST_TOKEN` | yes | Bearer token for `/api/ingest/*` and `GET /api/metrics`. `openssl rand -hex 32` |
 | `SITE_URL` | yes | Public origin, no trailing slash. RSS, canonical links, and the metrics cron's health check. |
+| `SUBSTACK_DIGEST_URL` | no | Section URL for the digest. Defaults to `https://sovereignsignal.substack.com/s/clawbytes`. The header, subscribe links, and `/issues` redirects use it. |
 | `SEED` | no | `1` shows sample rows in production. Leave unset. |
 
-Set these where you run the draft script (laptop or a one-off shell), not required for the site to serve pages:
-
-| Variable | Purpose |
-|---|---|
-| `OLLAMA_HOST` | OpenAI-compatible origin. Use `https://ollama.com`. |
-| `OLLAMA_API_KEY` | Bearer token for that endpoint. |
-| `OLLAMA_MODEL` | Default `kimi-k3`. |
-| `OLLAMA_FALLBACK_MODELS` | Comma-separated, tried in order. Example: `glm-5.3,deepseek-v4.1-flash`. |
-
-If the host, key, or model is missing, or a model returns empty text, the script walks the fallback list and then writes a deterministic draft from the same facts. Empty `content` from a reasoning model counts as a miss. The call asks for a large `max_tokens` (8192).
+`OLLAMA_HOST`, `OLLAMA_API_KEY`, `OLLAMA_MODEL`, and `OLLAMA_FALLBACK_MODELS` are unused. The digest is written on Substack, and the draft command no longer calls a model.
 
 ## Deploy on Railway
 
@@ -209,38 +200,18 @@ The same `canonical_key` from two bots becomes one item with two appearances. Ea
 
 Removing rows is `DELETE /api/ingest/items` with the same bearer token and `{"canonical_keys":["..."]}`. `?dry_run=1` returns `deleted` and `not_found` and does not write. The route is not linked from the site.
 
-Newsletter issues can also be pushed to `POST /api/ingest/issues` (upsert on `slug`, status `draft` or `published`). A published issue cannot be moved back to draft through that endpoint. The weekly script does not use it.
+`POST /api/ingest/issues` still accepts an issue upsert (`slug`, status `draft` or `published`). A published issue cannot be moved back to draft through that endpoint. The site does not render those rows. `/issues` redirects to Substack, and the draft and publish commands do not call this route.
 
-## Weekly letter
+## Digest
 
-The week is the Monday–Sunday UTC week that contains the date you pass.
-
-```bash
-npm run newsletter:draft -- --week 2026-10-05
-```
-
-That reads registry items whose `published_at` or a Telegram `posted_at` falls in the week (sample rows excluded). Ranking is: more distinct bots, then higher `score`, then more appearances, then newer `published_at`.
-
-The model only writes sentences. Code picks the items, the counts, and every link. A sentence is kept only when every link in it is one of that item's URLs and every number already appears in the fact sheet. Each lead sentence has to contain the item's title. If the prose fails, the next model is tried, then a template that only restates those facts.
-
-Outputs:
-
-- a `draft` row in `issues` (slug `week-YYYY-MM-DD`)
-- `exports/week-YYYY-MM-DD.md`
-- `exports/week-YYYY-MM-DD.html` (paste this into whatever sends the letter)
-- `exports/week-YYYY-MM-DD.meta.txt` (which model, or `template`)
-
-The script refuses to overwrite an issue that is already published. It does not send email.
-
-Add `--include-samples` to draft from seed data locally.
-
-Publish, when the draft is the one you want:
+ClawBytes on Sovereign Signal goes out twice a week, Tuesday and Friday, as a section of [Sovereign Signal](https://sovereignsignal.substack.com/s/clawbytes).
 
 ```bash
-npm run newsletter:publish -- --slug week-2026-10-05
+npm run newsletter:draft
+npm run newsletter:publish
 ```
 
-That flips `status` to `published`. The page is `/issues/week-2026-10-05`. Still no email.
+Both commands print that Substack address and exit. They do not rank a week, call a model, write `exports/`, or change a row. The issues tables stay.
 
 ## Scripts
 
@@ -251,8 +222,8 @@ That flips `status` to `published`. The page is `/issues/week-2026-10-05`. Still
 | `npm run lint` / `typecheck` | ESLint and `tsc --noEmit`. |
 | `npm run db:migrate` | Apply `drizzle/`. |
 | `npm run seed` | Sample items and one sample issue. |
-| `npm run newsletter:draft` | Draft for `--week YYYY-MM-DD`. |
-| `npm run newsletter:publish` | Publish `--slug`. |
+| `npm run newsletter:draft` | No-op. Prints the Substack address. |
+| `npm run newsletter:publish` | No-op. Prints the Substack address. |
 | `npm run metrics` | Cron pass: migrate, then subscribers, yield, and health. |
 
 ## License

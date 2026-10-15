@@ -16,6 +16,11 @@ export function SiteFooter() {
             <p>
               {brand.about} {brand.byline}.
             </p>
+            <p className="footer-subscribe">
+              <a className="button" href={brand.substackUrl} target="_blank" rel="noopener noreferrer">
+                Subscribe
+              </a>
+            </p>
           </div>
           <nav aria-label="Footer" className="footer-links">
             {wires.map((wire) => (
@@ -25,9 +30,6 @@ export function SiteFooter() {
             ))}
             <a href="/feed.xml">
               <Crab /> Items RSS
-            </a>
-            <a href="/issues/feed.xml">
-              <Crab /> Newsletter RSS
             </a>
             <a href="/stats">
               <Crab /> Subscriber counts

@@ -56,10 +56,7 @@ export const metadata: Metadata = {
   },
   alternates: {
     types: {
-      'application/rss+xml': [
-        { url: '/feed.xml', title: brand.name },
-        { url: '/issues/feed.xml', title: brand.newsletterName },
-      ],
+      'application/rss+xml': [{ url: '/feed.xml', title: brand.name }],
     },
   },
 };
@@ -86,7 +83,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <a className="skip" href="#content">Skip to content</a>
         <PNWParallaxBg />
         <div className="site-shell">
-          <SiteHeader />
+          <SiteHeader name={brand.name} byline={brand.byline} newsletterUrl={brand.substackUrl} />
           {samples ? (
             <p className="wrap banner">
               {production

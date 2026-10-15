@@ -2,14 +2,15 @@ import { Empty } from '@/components/Empty';
 import { PageHeader } from '@/components/PageHeader';
 import { SubscriberStats } from '@/components/SubscriberStats';
 import { listSubscriberSeries } from '@/lib/metrics/subscribers';
+import { pageMetadata } from '@/lib/page-meta';
 import { safeQuery } from '@/lib/safe';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata = {
+export const metadata = pageMetadata('/stats', {
   title: 'Subscribers',
   description: 'Daily subscriber counts for the public ClawBytes Telegram feeds.',
-};
+});
 
 export default async function StatsPage() {
   const series = await safeQuery(() => listSubscriberSeries(), null);

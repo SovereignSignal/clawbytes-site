@@ -1,3 +1,6 @@
+/**
+ * @deprecated Draft rendering moved to Substack. Kept so stored drafts and tests still load.
+ */
 import { brand } from '@/config/brand';
 import { formatWhen } from '@/lib/format';
 import type { PublicSectionId, RankableItem } from './rank';
