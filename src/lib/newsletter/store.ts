@@ -1,10 +1,17 @@
+/**
+ * @deprecated Publishing moved to Substack. These helpers stay so old rows and tests still load.
+ * Do not draft or publish from here.
+ */
 import { eq } from 'drizzle-orm';
 import type { Db } from '@/db/client';
 import { issues } from '@/db/schema';
 import { applyIssueBatch } from '@/lib/ingest/issues';
 import type { NewsletterDraft } from '@/lib/newsletter/render';
 
-/** Writes a draft. Refuses to overwrite an issue that is already published. */
+/**
+ * @deprecated The digest is published on Substack.
+ * Writes a draft. Refuses to overwrite an issue that is already published.
+ */
 export async function saveDraftIssue(
   db: Db,
   draft: NewsletterDraft,
@@ -28,6 +35,7 @@ export async function saveDraftIssue(
   ]);
 }
 
+/** @deprecated The digest is published on Substack. */
 export async function publishIssue(db: Db, slug: string): Promise<'published' | 'already'> {
   const existing = await db.select().from(issues).where(eq(issues.slug, slug)).limit(1);
   const row = existing[0];

@@ -3,6 +3,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { Pager } from '@/components/Pager';
 import { publicBlurb } from '@/config/brand';
 import { MODALITIES } from '@/lib/ingest/items';
+import { pageMetadata } from '@/lib/page-meta';
 import { listModelFacets, listModels, pageNumber } from '@/lib/queries';
 import { safeQuery } from '@/lib/safe';
 import { includeSampleData } from '@/lib/samples';
@@ -11,7 +12,7 @@ export const dynamic = 'force-dynamic';
 
 const modelsBlurb = publicBlurb('models');
 
-export const metadata = { title: 'Models', description: modelsBlurb };
+export const metadata = pageMetadata('/models', { title: 'Models', description: modelsBlurb });
 
 export default async function ModelsPage({
   searchParams,

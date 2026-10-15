@@ -1,25 +1,23 @@
-import Link from 'next/link';
+import type { Metadata } from 'next';
 import { ChannelStrip } from '@/components/ChannelStrip';
 import { Crab } from '@/components/Crab';
-import { Empty } from '@/components/Empty';
+import { DigestSubscribe } from '@/components/DigestSubscribe';
 import { Hero } from '@/components/Hero';
 import { ItemList } from '@/components/ItemList';
 import { PixelDivider } from '@/components/PixelDivider';
 import { SectionTag } from '@/components/SectionTag';
-import { brand } from '@/config/brand';
-import { formatWhen } from '@/lib/format';
-import { latestPublishedIssue, listLatest } from '@/lib/queries';
+import { pageMetadata } from '@/lib/page-meta';
+import { listLatest } from '@/lib/queries';
 import { safeQuery } from '@/lib/safe';
 import { includeSampleData } from '@/lib/samples';
 
 export const dynamic = 'force-dynamic';
 
+export const metadata: Metadata = pageMetadata('/');
+
 export default async function HomePage() {
   const samples = includeSampleData();
-  const [latest, issue] = await Promise.all([
-    safeQuery(() => listLatest(samples), []),
-    safeQuery(() => latestPublishedIssue(samples), null),
-  ]);
+  const latest = await safeQuery(() => listLatest(samples), []);
 
   return (
     <main>
@@ -30,15 +28,7 @@ export default async function HomePage() {
         <Crab /> Follow the live feeds
       </h2>
       <ChannelStrip />
-      {issue ? (
-        <Link className="issue-card" href={`/issues/${issue.slug}`}>
-          <p className="kicker">{brand.newsletterName} · {formatWhen(issue.publishedAt)}</p>
-          <strong>{issue.title}</strong>
-          <p className="summary">{issue.themeLine}</p>
-        </Link>
-      ) : (
-        <Empty>No issue of {brand.newsletterName} yet.</Empty>
-      )}
+      <DigestSubscribe />
       <section id="latest">
         <SectionTag section="02" label="Now" meta="Newest" />
         <h2 className="section-title">

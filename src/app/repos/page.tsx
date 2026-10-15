@@ -6,6 +6,7 @@ import { Pager } from '@/components/Pager';
 import { publicBlurb } from '@/config/brand';
 import { groupByTheme } from '@/lib/group';
 import { listingHref } from '@/lib/listing';
+import { pageMetadata } from '@/lib/page-meta';
 import { listRepoThemes, listRepos, pageNumber } from '@/lib/queries';
 import { safeQuery } from '@/lib/safe';
 import { includeSampleData } from '@/lib/samples';
@@ -14,7 +15,7 @@ export const dynamic = 'force-dynamic';
 
 const reposBlurb = publicBlurb('repos');
 
-export const metadata = { title: 'Repos', description: reposBlurb };
+export const metadata = pageMetadata('/repos', { title: 'Repos', description: reposBlurb });
 
 export default async function ReposPage({
   searchParams,

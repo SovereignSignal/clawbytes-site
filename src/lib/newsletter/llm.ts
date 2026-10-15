@@ -1,3 +1,6 @@
+/**
+ * @deprecated Drafting moved to Substack. The model client stays so tests still load.
+ */
 export const DEFAULT_OLLAMA_MODEL = 'kimi-k3';
 
 export function ollamaChatUrl(host: string): string {

@@ -458,6 +458,7 @@ h2 {
 .channel,
 .item,
 .issue-card,
+.digest-cta,
 .console-frame,
 .stats-card {
   background: hsl(var(--card));
@@ -504,6 +505,29 @@ h2 {
   margin: 0 0 1.4rem;
   border-left: 4px solid hsl(var(--primary));
   text-decoration: none;
+}
+
+.digest-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.95rem 1rem;
+  margin: 0 0 1.4rem;
+  border-left: 4px solid hsl(var(--primary));
+}
+
+.digest-cta .kicker,
+.digest-cta .summary {
+  margin: 0;
+}
+
+.digest-cta .summary {
+  max-width: 42rem;
+}
+
+.footer-subscribe {
+  margin: 0.85rem 0 0;
 }
 
 .issue-card:hover { color: inherit; }
@@ -967,6 +991,7 @@ button:hover { color: hsl(var(--primary-foreground)); filter: brightness(1.08); 
   .channel,
   .item,
   .issue-card,
+  .digest-cta,
   .console-frame,
   .stats-card,
   .button,

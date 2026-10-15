@@ -75,7 +75,7 @@ Required: `slug`, `title`, `theme_line`, `published_at`, `body_markdown`, `statu
 
 Upsert is on `slug`. A published issue cannot be moved back to `draft` through this endpoint.
 
-The weekly draft script does not use this endpoint. It writes `status: draft` directly, and it refuses to overwrite a published issue. Publishing is `npm run newsletter:publish`.
+The on-site issue pages redirect to the ClawBytes section on Substack. `npm run newsletter:draft` and `npm run newsletter:publish` do not write rows. They print the Substack address and exit. This endpoint remains for a direct upsert. A published issue still cannot be moved back to `draft` through it. The issues tables are not dropped.
 
 ## What the bots do
 

@@ -109,6 +109,10 @@ describe('crab personality', () => {
     expect(hero).toContain(brand.name);
     expect(hero).toContain(brand.mark);
     expect(hero).toContain(brand.tagline);
+    expect(hero).toContain('Twice a week');
+    expect(hero).toContain('TWICE');
+    expect(hero).not.toContain('Every week');
+    expect(hero).not.toContain('WEEKLY');
 
     const cards = renderToStaticMarkup(<ChannelStrip />);
     expect(cards).toContain(brand.mark);

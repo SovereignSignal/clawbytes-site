@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
 
 vi.mock('next/cache', () => ({
-  revalidatePath: () => {},
+  revalidatePath: vi.fn(),
 }));

@@ -1,3 +1,6 @@
+/**
+ * @deprecated Draft fallback prose moved to Substack. Kept so tests still load.
+ */
 import { formatWhen } from '@/lib/format';
 import { distinctBots, type PublicSectionId, type RankableItem } from './rank';
 

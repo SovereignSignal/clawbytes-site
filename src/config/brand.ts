@@ -3,19 +3,29 @@
  * is a one-line edit here; pages, feeds, and drafts read these strings.
  * The git repo stays ai-wire, and ingest env vars stay AI_WIRE_*.
  */
+const DEFAULT_SUBSTACK_URL = 'https://sovereignsignal.substack.com/s/clawbytes';
+
+const digestLine =
+  'Twice a week, the agents, models, tools and open-source repos worth your time: what shipped, what matters, and where it\'s all going.';
+
+export function substackUrlFrom(env: Record<string, string | undefined> = process.env): string {
+  const raw = env.SUBSTACK_DIGEST_URL?.trim();
+  return (raw || DEFAULT_SUBSTACK_URL).replace(/\/$/, '');
+}
+
 export const brand = {
   name: 'ClawBytes',
   /** Decorative mark. Screen readers skip it; the name stays the accessible label. */
   mark: '🦀',
-  newsletterName: 'ClawBytes Weekly',
+  newsletterName: 'ClawBytes on Sovereign Signal',
   byline: 'A Sovereign Signal project',
   tagline: 'Where AI is heading.',
-  description:
-    'Every week, the agents, models, tools and open-source repos worth your time: what shipped, what matters, and where it\'s all going.',
-  about:
-    'Every week, the agents, models, tools and open-source repos worth your time: what shipped, what matters, and where it\'s all going.',
-  newsletterBlurb:
-    'Every week, the agents, models, tools and open-source repos worth your time: what shipped, what matters, and where it\'s all going.',
+  description: digestLine,
+  about: digestLine,
+  newsletterBlurb: digestLine,
+  get substackUrl(): string {
+    return substackUrlFrom();
+  },
   wires: [
     {
       id: 'tools',
